@@ -95,6 +95,9 @@ preview is unsigned; macOS uses an ad hoc signature.
 
 ## Source and build provenance
 
+The published 0.2.0 preview is now immutable. Its assets and tag are fixed;
+new binary or source-bundle additions require a new release version.
+
 - `7zip-hatch-0.2.0-source-with-dependencies.tar.gz` includes the application
   source, locked Cargo dependency sources, vendor configuration, and installer
   scripts. `SOURCE-COMMIT.txt` identifies its exact revision.

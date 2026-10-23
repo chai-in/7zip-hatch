@@ -11,9 +11,10 @@ from GitHub Actions, resolved review conversations, linear history, and no
 force pushes or deletion. The project has one maintainer, so a second approval
 is not mandatory. Administrator emergency bypass is limited to pull requests.
 Squash merge is the only enabled merge strategy, and merged branches are
-deleted automatically. Future releases use GitHub release immutability: finalize
-all draft assets before publication. Existing 0.2.0 assets are not retroactively
-frozen by that setting. Version tags matching `v*` are protected from update
+deleted automatically. GitHub release immutability is enabled, including for
+the published 0.2.0 preview: finalize all draft assets before publication.
+Binary or source-asset additions require a new release version.
+Version tags matching `v*` are protected from update
 and deletion, with an explicit repository administrator override for recovery.
 
 The active rule definitions are versioned under `.github/rulesets/`. Changes

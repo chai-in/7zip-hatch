@@ -29,11 +29,10 @@ INSTALLER-PAYLOAD.json against build artifacts and CI revisions.
 
 ## Publish
 
-GitHub release immutability is enabled for future releases. Once a new release
-is published, its assets cannot be added, replaced, or removed, and its tag
-cannot be moved or reused. Finish the draft and verify every asset before
-publishing. Existing 0.2.0 remains mutable under GitHub's policy, with version
-tag protection and recorded provenance.
+GitHub release immutability is enabled. The published 0.2.0 preview is also
+immutable. Published assets cannot be added, replaced, or removed, and the
+release tag cannot be moved or reused. Finish the draft and verify every
+asset before publishing.
 
 1. Create a draft release on the verified tag. Upload tested artifacts and
    matching source bundles; do not rebuild an untested local binary for upload.
@@ -45,11 +44,12 @@ tag protection and recorded provenance.
    links and update the README. Do not promote a preview just to make it appear
    under GitHub's stable `releases/latest` URL.
 
-Published version tags and release binaries should remain immutable. Correct
-a broken binary with a new version. If a source, notice, or metadata correction
-must be added to an existing preview, document the added asset's exact revision
-and update its checksums transparently. The 0.2.0 installer/source additions
-are explained in [download provenance](../Hatch/DOWNLOADS.md#source-and-build-provenance).
+Published tags and assets are immutable. Correct a binary, missing source,
+or bundled notice with a new release version. Titles and release notes can
+be clarified without replacing assets; keep their claims tied to the exact
+published files. The 0.2.0 installers and source additions were completed
+before the preview became immutable. Their recorded revisions are explained
+in [download provenance](../Hatch/DOWNLOADS.md#source-and-build-provenance).
 
 Do not claim reproducible bit-for-bit builds, signing, certification, platform
 coverage, or performance improvements without evidence for those exact artifacts.
