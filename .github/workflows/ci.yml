@@ -97,3 +97,18 @@ jobs:
           name: 7zip-hatch-${{ runner.os }}-${{ runner.arch }}
           path: build/packages/*
           if-no-files-found: error
+
+  windows-file-manager:
+    name: Windows File Manager
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile native File Manager with the Hatch menu
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          cd CPP\7zip\Bundles\Fm
+          nmake /nologo /f makefile PLATFORM=x64 O=hatch-desktop-x64-ci DISABLE_RAR_COMPRESS=1
