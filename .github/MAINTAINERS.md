@@ -11,7 +11,9 @@ from GitHub Actions, resolved review conversations, linear history, and no
 force pushes or deletion. The project has one maintainer, so a second approval
 is not mandatory. Administrator emergency bypass is limited to pull requests.
 Squash merge is the only enabled merge strategy, and merged branches are
-deleted automatically. Version tags matching `v*` are protected from update
+deleted automatically. Future releases use GitHub release immutability: finalize
+all draft assets before publication. Existing 0.2.0 assets are not retroactively
+frozen by that setting. Version tags matching `v*` are protected from update
 and deletion, with an explicit repository administrator override for recovery.
 
 The active rule definitions are versioned under `.github/rulesets/`. Changes
@@ -24,6 +26,7 @@ API or Settings. They do not synchronize themselves.
   `pull_request`, not privileged `pull_request_target` execution.
 - Workflow actions use full commit SHAs. The repository's Actions policy
   permits GitHub-owned actions and requires SHA pins.
+- Dependency review blocks newly introduced high/critical vulnerabilities in pull requests.
 - Dependabot checks GitHub Actions and the Cargo workspace weekly. Updates
   are reviewed pull requests, not automatically merged dependency changes.
 - Dependency alerts, automated security-fix PRs, private vulnerability
@@ -44,3 +47,9 @@ in the versioned repository. Release steps are in [RELEASING.md](RELEASING.md).
 Review security alerts, dependency updates, broken links, release downloads,
 and supported platform requirements regularly. Do not auto-close unanswered
 bugs as stale or imply a support schedule the maintainer cannot meet.
+
+## Presentation assets
+
+The repository social card and actual desktop screenshot are versioned under
+[Hatch/assets](../Hatch/assets). The card is uploaded through repository Settings;
+changing its source file does not automatically update GitHub's configured image.

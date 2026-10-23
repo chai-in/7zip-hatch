@@ -55,7 +55,9 @@ and `hatch completions` generators are retained; their generated standalone
   Snapshots/clones and filesystem behavior can delay actual reclamation.
 - Destructive mode does not cover every format normal 7-Zip can read.
   RAR, native split `.z01` ZIP, `.tar.xz`, and `.tar.zst` are not supported
-  by the HatchZip engine; use ordinary extraction for them.
+  by the HatchZip engine. Use ordinary extraction when the bundled native
+  engine supports the format. Default FOSS binaries omit the unRAR-restricted
+  codecs and cannot decompress most compressed RAR entries.
 - Restore retains extracted files and rebuilds the unextracted remainder.
   It cannot undo already punched stream data, and currently refuses
   encrypted 7z archives. It does not recreate the original full archive.

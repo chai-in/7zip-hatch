@@ -29,6 +29,12 @@ INSTALLER-PAYLOAD.json against build artifacts and CI revisions.
 
 ## Publish
 
+GitHub release immutability is enabled for future releases. Once a new release
+is published, its assets cannot be added, replaced, or removed, and its tag
+cannot be moved or reused. Finish the draft and verify every asset before
+publishing. Existing 0.2.0 remains mutable under GitHub's policy, with version
+tag protection and recorded provenance.
+
 1. Create a draft release on the verified tag. Upload tested artifacts and
    matching source bundles; do not rebuild an untested local binary for upload.
 2. Produce SHA256SUMS from final files. Verify GitHub's uploaded sizes and
