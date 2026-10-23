@@ -20,6 +20,10 @@
 
 using namespace NWindows;
 
+#ifdef Z7_HATCHZIP
+extern "C" int Z7_CDECL sevenzip_hatch_dispatch(void);
+#endif
+
 extern
 CStdOutStream *g_StdStream;
 CStdOutStream *g_StdStream = NULL;
@@ -107,6 +111,14 @@ int Z7_CDECL main
   #endif
 )
 {
+#ifdef Z7_HATCHZIP
+  // HatchZip owns its signals and exit codes. Dispatch before 7-Zip installs
+  // its handlers, and leave every existing command to the original parser.
+  const int hatchResult = sevenzip_hatch_dispatch();
+  if (hatchResult >= 0)
+    return hatchResult;
+#endif
+
   g_ErrStream = &g_StdErr;
   g_StdStream = &g_StdOut;
 

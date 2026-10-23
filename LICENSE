@@ -1,0 +1,18 @@
+7zip-hatch uses GNU LGPL version 2.1 or (at your option) any later version
+for 7-Zip and new integration files, except where a file or vendored
+component specifies its own license.
+
+Full LGPL text: DOC/copying.txt
+7-Zip file-specific licenses and notices: DOC/License.txt
+
+third_party/hatchzip is MIT OR Apache-2.0, including modifications to its
+CLI embedding and test entry points. Full texts:
+  third_party/hatchzip/LICENSE-MIT
+  third_party/hatchzip/LICENSE-APACHE
+
+Default builds exclude RAR decompression codecs subject to the additional
+unRAR restriction. Retained source remains under its original terms in
+DOC/License.txt and DOC/unRarLicense.txt. --with-rar retains those terms.
+
+Dependencies retain their respective licenses. Retain these notices when
+redistributing source or binaries. No upstream endorsement is implied.

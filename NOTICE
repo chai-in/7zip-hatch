@@ -1,0 +1,18 @@
+7zip-hatch
+
+7-Zip 26.05
+Copyright (C) 1999-2026 Igor Pavlov
+https://github.com/ip7z/7zip
+Upstream commit: b88c6bc09339de32f7d18bbab900686b244f42ba
+Licenses and third-party notices: DOC/License.txt
+
+HatchZip 0.1.2
+Copyright (c) 2026 HatchZip contributors
+https://github.com/xevrion/hatchzip
+Upstream commit: d8a4edbc9ec8ef84540e42408916a409a7d3c21b
+Licenses: third_party/hatchzip/LICENSE-MIT and LICENSE-APACHE
+
+Local changes: static-library CLI entry point, native command dispatch,
+build tooling, integration tests, documentation, and CI.
+The extraction engine, storage, journal, and format implementation are
+vendored without changes at the above commit.

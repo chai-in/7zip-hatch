@@ -1,0 +1,109 @@
+import { Palette } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import { Phase, PlanView, TaskView, Progress, Outcome, Busy, TaskButtons, PasswordPrompt } from "parts.slint";
+
+// The small window a right-click opens. It does one thing and closes.
+export component TaskWindow inherits Window {
+    in property <TaskView> task;
+    in property <PlanView> plan;
+    in property <bool> password-shown;
+    in property <bool> password-wrong;
+    in property <string> password-name;
+
+    callback pause();
+    callback resume();
+    callback open-folder();
+    callback dismiss();
+    callback give-back();
+    callback password-ok(string);
+    callback password-cancel();
+
+    title: root.task.heading;
+    preferred-width: 480px;
+    // Tall enough for the longest state and the password prompt, so the
+    // window never has to grow while it is on screen.
+    preferred-height: 250px;
+    min-width: 420px;
+    background: Palette.background;
+
+    VerticalLayout {
+        padding: Theme.gutter;
+        spacing: 12px;
+
+        VerticalLayout {
+            spacing: 4px;
+            Text {
+                text: root.task.heading;
+                font-size: 15px;
+                font-weight: 600;
+                overflow: elide;
+            }
+            Text {
+                text: root.task.detail;
+                color: Theme.muted;
+                overflow: elide;
+            }
+            if root.task.space != "": Text {
+                text: root.task.space;
+                color: Theme.muted;
+                overflow: elide;
+            }
+        }
+
+        if root.task.phase == Phase.checking: Busy {
+            text: "Checking disk space…";
+        }
+        if root.task.phase == Phase.verifying || root.task.phase == Phase.working || root.task.phase == Phase.pausing || root.task.phase == Phase.paused: Progress {
+            task: root.task;
+        }
+        if root.task.phase == Phase.no-space: Text {
+            text: "Available: " + root.plan.free + ". Required: " + root.plan.needed + ", plus " + root.plan.keep + " reserved.";
+            color: Theme.muted;
+            wrap: word-wrap;
+        }
+        Outcome {
+            task: root.task;
+        }
+        if root.task.phase == Phase.no-space && root.plan.note != "": Text {
+            text: root.plan.note;
+            wrap: word-wrap;
+            color: Theme.muted;
+            font-size: Theme.small-size;
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+        }
+
+        TaskButtons {
+            task: root.task;
+            closable: true;
+            pause => {
+                root.pause();
+            }
+            resume => {
+                root.resume();
+            }
+            open-folder => {
+                root.open-folder();
+            }
+            close => {
+                root.dismiss();
+            }
+            give-back => {
+                root.give-back();
+            }
+        }
+    }
+
+    if root.password-shown: PasswordPrompt {
+        name: root.password-name;
+        wrong: root.password-wrong;
+        ok(text) => {
+            root.password-ok(text);
+        }
+        cancel => {
+            root.password-cancel();
+        }
+    }
+}

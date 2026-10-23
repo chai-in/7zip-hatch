@@ -105,4 +105,13 @@ OBJS = \
   $(UI_COMMON_OBJS) \
   $(CONSOLE_OBJS) \
 
+ifdef HATCHZIP_LIB
+LOCAL_FLAGS += -DZ7_HATCHZIP
+MY_LIBS += "$(HATCHZIP_LIB)" $(HATCHZIP_NATIVE_LIBS)
+endif
+
 include ../../7zip_gcc.mak
+
+ifdef HATCHZIP_LIB
+$(PROGPATH): $(HATCHZIP_LIB)
+endif

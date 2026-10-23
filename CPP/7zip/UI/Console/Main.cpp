@@ -139,6 +139,9 @@ static const char * const kHelpString =
     "  d : Delete files from archive\n"
     "  e : Extract files from archive (without using directory names)\n"
     "  h : Calculate hash values for files\n"
+#ifdef Z7_HATCHZIP
+    "  hatch : Space-saving extraction (run: 7zz hatch --help)\n"
+#endif
     "  i : Show information about supported formats\n"
     "  l : List contents of archive\n"
     "  rn : Rename files in archive\n"

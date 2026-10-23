@@ -1,0 +1,74 @@
+name: Embedded HatchZip
+
+on:
+  push:
+    branches: [main, hatchzip-integration]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hatch-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust tools
+        run: rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+      - name: Format
+        working-directory: third_party/hatchzip
+        run: cargo fmt --all --check
+      - name: Clippy
+        working-directory: third_party/hatchzip
+        run: cargo clippy --locked -p hatchzip -p hatchzip-core --all-targets -- -D warnings
+      - name: Build embedded executable (Unix)
+        if: runner.os != 'Windows'
+        run: python3 Hatch/build.py --debug --jobs 4
+      - name: Build embedded executable (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          python Hatch/build.py --debug --jobs 4
+      - name: Test combined executable (Unix)
+        if: runner.os != 'Windows'
+        run: python3 Hatch/test_integration.py build/debug/7zz --crash-tests
+      - name: Test combined executable (Windows)
+        if: runner.os == 'Windows'
+        run: python Hatch/test_integration.py build/debug/7zz.exe --crash-tests
+      - name: Upstream recovery suites through embedded executable
+        shell: bash
+        working-directory: third_party/hatchzip
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then suffix=.exe; else suffix=; fi
+          export SEVENZIP_HATCH_BINARY="$GITHUB_WORKSPACE/build/debug/7zz$suffix"
+          export CARGO_TARGET_DIR="$GITHUB_WORKSPACE/build/hatch-target"
+          cargo test --locked -p hatchzip -p hatchzip-core
+      - name: Build release (Unix)
+        if: runner.os != 'Windows'
+        run: python3 Hatch/build.py --jobs 4
+      - name: Build release (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          python Hatch/build.py --jobs 4
+      - name: Test release (Unix)
+        if: runner.os != 'Windows'
+        run: python3 Hatch/test_integration.py build/release/7zz
+      - name: Test release (Windows)
+        if: runner.os == 'Windows'
+        run: python Hatch/test_integration.py build/release/7zz.exe

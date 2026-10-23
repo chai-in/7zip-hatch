@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>HatchZip: extract huge archives in place</title>
+<meta name="description" content="HatchZip extracts ZIP, 7z, tar and split archives in place, so you only need free space for the files, not for the files and the archive. Free and open source.">
+<link rel="canonical" href="https://xevrion.github.io/hatchzip/">
+<meta property="og:url" content="https://xevrion.github.io/hatchzip/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="HatchZip">
+<meta property="og:description" content="Extract huge archives without needing double the disk space. Free and open source, for Windows, macOS and Linux.">
+<meta property="og:image" content="https://xevrion.github.io/hatchzip/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="HatchZip: extract huge archives without double the disk space.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" type="text/plain" href="llms.txt" title="HatchZip for language models">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"HatchZip","description":"Extracts ZIP, 7z, tar and split archives in place, so you only need free space for the files, not for the files and the archive.","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux","url":"https://xevrion.github.io/hatchzip/","downloadUrl":"https://github.com/xevrion/hatchzip/releases/latest","license":"https://github.com/xevrion/hatchzip/blob/main/LICENSE-MIT","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Yash Bavadiya","url":"https://x.com/xevrion_the1"},"codeRepository":"https://github.com/xevrion/hatchzip"}
+</script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+<div class="page">
+<aside class="side">
+<a class="brand" href="./"><img src="favicon.svg" alt="" width="48" height="48"><span>HatchZip</span></a>
+<nav aria-label="On this page">
+<ul>
+<li><a href="#download">Download</a></li>
+<li><a href="#features">What it does</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#limits">Limits</a></li>
+<li><a href="https://github.com/xevrion/hatchzip/blob/main/docs/how-it-works.md">How it works</a></li>
+<li><a href="https://github.com/xevrion/hatchzip">Source code</a></li>
+<li><a href="https://github.com/xevrion/hatchzip/issues">Report a bug</a></li>
+</ul>
+</nav>
+</aside>
+
+<div class="content">
+<header class="top">
+<div>
+<h1>HatchZip</h1>
+<p class="lead">Extract huge archives without needing double the disk space.</p>
+</div>
+<div class="links">
+<a class="gh" href="https://github.com/xevrion/hatchzip"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>Star on GitHub</span></a>
+<a class="gh" href="https://github.com/sponsors/xevrion"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="#bf3989" d="M7.655 14.916v-.001h-.002l-.006-.003-.018-.01a22.066 22.066 0 0 1-3.744-2.584C2.045 10.731 0 8.35 0 5.5 0 2.836 2.086 1 4.25 1 5.797 1 7.153 1.802 8 3.02 8.847 1.802 10.203 1 11.75 1 13.914 1 16 2.836 16 5.5c0 2.85-2.044 5.231-3.886 6.818a22.094 22.094 0 0 1-3.433 2.414 7.152 7.152 0 0 1-.31.17l-.018.01-.008.004a.75.75 0 0 1-.69 0Z"/></svg><span>Sponsor</span></a>
+<a class="gh" href="https://ko-fi.com/xevrion"><span>Buy me a coffee</span></a>
+</div>
+</header>
+<main>
+<p>A 180 GB archive that unpacks to 200 GB needs 380 GB of disk with WinRAR, 7-Zip or <code>unzip</code>, because the archive and the extracted files have to exist at the same time. HatchZip needs a little over 200 GB: it extracts from the end of the archive and cuts each finished part off the archive file, so the space comes back as it goes.</p>
+<p>Free and open source, for Windows, macOS and Linux.</p>
+<img class="shot" src="img/how.webp" width="960" height="540" alt="An animation: HatchZip extracts the last part of the archive into the folder, then cuts that part off the archive, so the disk never holds the archive and all the files at once.">
+
+<section aria-labelledby="download">
+<h2 id="download">Download</h2>
+<p class="gets">
+<a class="get" href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x64-setup.exe">Windows</a>
+<a class="get" href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-aarch64.dmg">macOS</a>
+<a class="get" href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x86_64.AppImage">Linux</a>
+</p>
+<p class="note">Windows 10 and 11, 64-bit. The macOS download is for Macs with Apple Silicon (M1 and later); for an older Intel Mac, get the <a href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x86_64.dmg">Intel version</a>. The Linux download is an AppImage that runs on most distributions; <a href="#all-downloads">.deb and .rpm packages</a> are below.</p>
+
+<h3>How to use it</h3>
+<ol>
+<li>Install it. HatchZip is not code-signed yet, so Windows may show "Windows protected your PC": choose More info, then Run anyway. On a Mac, open the app once, then allow it in System Settings, Privacy &amp; Security.</li>
+<li>Right-click the archive, choose HatchZip, then Extract here (Windows and Linux). On Windows 11 the menu is under Show more options.</li>
+<li>Or open the HatchZip app, open the archive or drag it onto the window, and choose Extract.</li>
+</ol>
+<p>HatchZip shows whether the files will fit before it changes anything. The archive is used up as the files come out, so when it finishes, only the extracted files are left.</p>
+<picture>
+<source srcset="img/app-dark.png" media="(prefers-color-scheme: dark)">
+<img class="shot" src="img/app-light.png" width="980" height="660" alt="The HatchZip window with an archive open: the list of files on the left, and on the right the disk space it needs, compared with a standard extraction.">
+</picture>
+
+<h3 id="all-downloads">All downloads</h3>
+<table class="stack">
+<caption>Command line</caption>
+<thead>
+<tr><th scope="col">Platform</th><th scope="col">File</th><th scope="col">Type</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Windows x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-x86_64-windows.zip">hatchzip-x86_64-windows.zip</a></td><td data-label="Type">zip</td></tr>
+<tr><th scope="row">macOS Apple Silicon</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-aarch64-macos.tar.gz">hatchzip-aarch64-macos.tar.gz</a></td><td data-label="Type">tar.gz</td></tr>
+<tr><th scope="row">macOS Intel</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-x86_64-macos.tar.gz">hatchzip-x86_64-macos.tar.gz</a></td><td data-label="Type">tar.gz</td></tr>
+<tr><th scope="row">Linux x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-x86_64-linux.tar.gz">hatchzip-x86_64-linux.tar.gz</a></td><td data-label="Type">tar.gz</td></tr>
+<tr><th scope="row">Linux ARM64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-aarch64-linux.tar.gz">hatchzip-aarch64-linux.tar.gz</a></td><td data-label="Type">tar.gz</td></tr>
+</tbody>
+</table>
+
+<table class="stack">
+<caption>Desktop app</caption>
+<thead>
+<tr><th scope="col">Platform</th><th scope="col">File</th><th scope="col">Type</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Windows x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x64-setup.exe">HatchZip-x64-setup.exe</a></td><td data-label="Type">Installer</td></tr>
+<tr><th scope="row">macOS Apple Silicon</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-aarch64.dmg">HatchZip-aarch64.dmg</a></td><td data-label="Type">Disk image</td></tr>
+<tr><th scope="row">macOS Intel</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x86_64.dmg">HatchZip-x86_64.dmg</a></td><td data-label="Type">Disk image</td></tr>
+<tr><th scope="row">Linux x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip_amd64.deb">hatchzip_amd64.deb</a></td><td data-label="Type">deb package</td></tr>
+<tr><th scope="row">Linux x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/hatchzip-x86_64.rpm">hatchzip-x86_64.rpm</a></td><td data-label="Type">rpm package</td></tr>
+<tr><th scope="row">Linux x64</th><td data-label="File"><a href="https://github.com/xevrion/hatchzip/releases/latest/download/HatchZip-x86_64.AppImage">HatchZip-x86_64.AppImage</a></td><td data-label="Type">AppImage</td></tr>
+</tbody>
+</table>
+<p class="note">The Windows setup and the macOS apps are not code-signed yet. On Windows choose More info, then Run anyway. On macOS, open the app once, then allow it in System Settings, Privacy &amp; Security.</p>
+
+<p>Or install from a terminal. Linux and macOS:</p>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/xevrion/hatchzip/main/install.sh | sh</code></pre>
+<p>Windows, in PowerShell:</p>
+<pre><code>irm https://raw.githubusercontent.com/xevrion/hatchzip/main/install.ps1 | iex</code></pre>
+<p>Or, with Rust installed: <code>cargo install hatchzip</code></p>
+<p>Then run <code>hatchzip check game.zip</code> to see whether it fits, and <code>hatchzip extract game.zip</code> to extract it. <code>hz</code> works as a short name, and <code>man hatchzip</code> has the full manual.</p>
+<p><a href="https://github.com/xevrion/hatchzip/releases">All releases</a></p>
+</section>
+
+<section aria-labelledby="features">
+<h2 id="features">What it does</h2>
+<ul>
+<li>Extracts ZIP (including ZIP64 and self-extracting <code>.exe</code> files), 7z, plain tar, <code>.tar.gz</code> and <code>.tgz</code>, and split archives (<code>.001</code>, <code>.002</code>, ...) of ZIP or 7z.</li>
+<li>A <code>.tar.gz</code> is read once from start to end before anything changes, so a damaged one is refused untouched. It then gives its space back as it extracts on NTFS (Windows), APFS (macOS), ext4, XFS, btrfs and other filesystems that can free part of a file. On FAT32 and exFAT it still extracts and resumes, but needs room for the archive and the files at once.</li>
+<li>Checks that the extraction will fit before it changes anything.</li>
+<li>Keeps 2 GB of free space by default, so the disk never fills to zero. Change it with <code>--keep-free</code>.</li>
+<li>Can be stopped with Ctrl+C, or crash, at any moment. Run the same command again and it picks up where it left off.</li>
+<li>Checks each file's CRC-32 as it extracts. A damaged file stops the run, and it stays in the archive.</li>
+<li>Never overwrites a file that is already there, so "extract here" is safe.</li>
+<li>Opens password-protected ZIP and 7z archives. It checks the password on one file before anything is deleted, and never saves it.</li>
+<li>Works on any filesystem that can shrink a file: ext4, btrfs, XFS, NTFS, APFS, and exFAT and FAT32 USB drives.</li>
+</ul>
+</section>
+
+<section aria-labelledby="results">
+<h2 id="results">Measured results</h2>
+<p>The same 200 MB of game data (21 files), packed by the real tools, extracted on a 220 MiB disk with about 50 MB free:</p>
+<table class="stack">
+<thead>
+<tr><th scope="col">Archive</th><th scope="col"><code>unzip</code> / <span class="nw">7-Zip</span></th><th scope="col">HatchZip</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">ZIP, 180 MB</th><td data-label="unzip / 7-Zip"><code>unzip</code> ran out of space at file 6 of 21</td><td data-label="HatchZip">Finished, every file byte-identical</td></tr>
+<tr><th scope="row">7z from <span class="nw">7-Zip</span> 25.01, <code>-ms=20m</code> (10 solid blocks)</th><td data-label="unzip / 7-Zip">Needs 380 MB</td><td data-label="HatchZip">Finished in 0.64 s, every file byte-identical</td></tr>
+<tr><th scope="row">7z split into 5 volumes of 40 MB</th><td data-label="unzip / 7-Zip">Needs 380 MB</td><td data-label="HatchZip">Finished; volumes deleted one at a time, peak 210 MB used</td></tr>
+<tr><th scope="row">tar from GNU tar, 200 MB</th><td data-label="unzip / 7-Zip">Needs 400 MB</td><td data-label="HatchZip">Finished in 0.12 s, every file byte-identical</td></tr>
+<tr><th scope="row">7z from <span class="nw">7-Zip</span> with default settings (1 solid block)</th><td data-label="unzip / 7-Zip">Needs 380 MB</td><td data-label="HatchZip">Refused before touching anything: one solid block can't be freed until all of it is out, so it needs 200 MB free</td></tr>
+</tbody>
+</table>
+<p>ZIP extraction of the same data took 0.25 to 0.35 s, against 1.48 to 1.50 s for <code>unzip</code> 6.00, including an fsync <code>unzip</code> skips. For crash safety, the process was killed at both unsafe moments of a batch at many points of each format's run; every resume finished with identical output.</p>
+<p class="note">Measured on Fedora 43, Intel Core i7-14700HX, SK Hynix NVMe SSD, warm page cache; the disk-space runs used a 220 MiB tmpfs to stand in for a full laptop disk, the speed runs ext4. Speed comes from decompressing files in parallel, so an archive holding one giant file extracts at the speed of a single core.</p>
+</section>
+
+<section aria-labelledby="limits">
+<h2 id="limits">Limits</h2>
+<ul>
+<li>A 7z made with 7-Zip's default settings can be one solid block. HatchZip can only free it once all of it is out, so it needs free space for the whole block. <code>hatchzip check</code> tells you before anything changes.</li>
+<li><code>.tar.zst</code>, <code>.tar.xz</code> and RAR are not supported yet. They are refused before extraction.</li>
+<li>The archive is used up as it extracts. If the download itself is damaged, the files before the damage come out and the archive is partly gone. Use <code>--verify-first</code> when you can't download it again.</li>
+</ul>
+</section>
+</main>
+
+<footer>
+<p>HatchZip is licensed under <a href="https://github.com/xevrion/hatchzip/blob/main/LICENSE-MIT">MIT</a> OR <a href="https://github.com/xevrion/hatchzip/blob/main/LICENSE-APACHE">Apache-2.0</a>. <a href="https://github.com/xevrion/hatchzip">Source on GitHub</a>. <a href="https://github.com/xevrion/hatchzip/issues">Report a bug</a>.</p>
+<p>Made by Yash Bavadiya (<a href="https://x.com/xevrion_the1">@xevrion_the1</a>).</p>
+</footer>
+</div>
+</div>
+</body>
+</html>

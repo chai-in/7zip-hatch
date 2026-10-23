@@ -1,0 +1,7 @@
+# 7-Zip and HatchZip build products
+**/b/
+**/_o/
+**/target/
+CPP/7zip/Bundles/Alone2/hatch-*/
+build/
+__pycache__/

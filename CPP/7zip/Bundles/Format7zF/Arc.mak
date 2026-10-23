@@ -226,12 +226,6 @@ COMPRESS_OBJS = \
   $O\PpmdRegister.obj \
   $O\PpmdZip.obj \
   $O\QuantumDecoder.obj \
-  $O\Rar1Decoder.obj \
-  $O\Rar2Decoder.obj \
-  $O\Rar3Decoder.obj \
-  $O\Rar3Vm.obj \
-  $O\Rar5Decoder.obj \
-  $O\RarCodecsRegister.obj \
   $O\ShrinkDecoder.obj \
   $O\XpressDecoder.obj \
   $O\XzDecoder.obj \
@@ -308,3 +302,14 @@ C_OBJS = \
 !include "../../Sha1.mak"
 !include "../../Sha256.mak"
 !include "../../Sort.mak"
+
+!IFNDEF DISABLE_RAR_COMPRESS
+COMPRESS_OBJS = $(COMPRESS_OBJS) \
+  $O\Rar1Decoder.obj \
+  $O\Rar2Decoder.obj \
+  $O\Rar3Decoder.obj \
+  $O\Rar3Vm.obj \
+  $O\Rar5Decoder.obj \
+  $O\RarCodecsRegister.obj \
+
+!ENDIF
