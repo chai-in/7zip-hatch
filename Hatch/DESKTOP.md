@@ -105,4 +105,8 @@ exclude RAR codecs with the unRAR restriction.
 
 Dependencies' distributed license and attribution files are included in
 `Licenses/`. Matching source and build instructions are published with the
-project. No upstream ownership or official endorsement is implied.
+project. `python3 Hatch/package_source.py` exports the committed tree plus
+all locked Cargo dependency sources into `build/packages/`. Extract that
+archive to build with the included vendor configuration; after installing
+the documented compiler/toolchain, Cargo can run offline. Release binaries
+are accompanied by this source bundle. No upstream ownership or official endorsement is implied.
