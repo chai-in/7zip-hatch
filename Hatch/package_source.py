@@ -21,10 +21,13 @@ def main():
     subprocess.run(["git", "archive", "--format=tar", "--output", str(source_tar), "HEAD"],
                    cwd=ROOT, check=True)
     prefix = f"7zip-hatch-{VERSION}"
-    config = b'[source.crates-io]\nreplace-with = "vendored-sources"\n\n[source.vendored-sources]\ndirectory = "vendor"\n'
+    original_config = WORKSPACE / ".cargo" / "config.toml"
+    config = original_config.read_bytes() + b'\n[source.crates-io]\nreplace-with = "vendored-sources"\n\n[source.vendored-sources]\ndirectory = "vendor"\n'
     with tarfile.open(destination, "w:gz", compresslevel=6) as output:
         with tarfile.open(source_tar) as source:
             for member in source:
+                if member.name == "third_party/hatchzip/.cargo/config.toml":
+                    continue
                 content = source.extractfile(member) if member.isfile() else None
                 member.name = f"{prefix}/{member.name}"
                 output.addfile(member, content)
