@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=7-Zip Hatch
+Comment=Create, browse and extract archives, with optional space-saving extraction
+Exec=7zip-hatch %f
+Icon=io.github.chai-in.7zip-hatch
+Terminal=false
+Categories=Utility;Archiving;
+MimeType=application/zip;application/x-7z-compressed;application/x-tar;application/gzip;application/x-xz;application/x-bzip2;application/zstd;
+StartupWMClass=io.github.chai-in.7zip-hatch

@@ -25,9 +25,12 @@ Space-saving extraction** command that opens the desktop preview.
 
 Open **7-Zip Hatch** like a normal application. On macOS, drag the app to
 Applications, then launch it from Finder or use **Open With** on an archive.
-On Windows, keep `7zip-hatch.exe`, `7zz.exe`, and `7zFM.exe` together and launch
-either the new desktop frontend or the original File Manager. On Linux,
-keep `7zip-hatch` and `7zz` together and launch `7zip-hatch`.
+On Windows, run the setup executable for Start menu entries, optional desktop
+and right-click shortcuts, and uninstall support. On Linux, make the AppImage
+executable and open it. This Linux build requires glibc 2.39 or newer.
+[Installer downloads and instructions](Hatch/installers/README.md) cover both
+platforms. Portable ZIP/tar packages remain available; keep all their binaries
+together when using those distributions.
 
 - **Open archive** or drop an archive onto the window to browse entries,
   choose the destination, compare space requirements, and test integrity.

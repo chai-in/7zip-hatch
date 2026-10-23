@@ -69,6 +69,12 @@ described in the root README.
 
 ## Desktop integration
 
+Windows setup and a Linux AppImage wrap the tested desktop packages.
+See [installer use, builds and validation](installers/README.md). The setup
+adds Start menu and optional desktop/right-click entries with uninstall
+support. The AppImage bundles the GUI, native engine and desktop libraries.
+Its minimum glibc version is 2.39.
+
 On Windows/Linux, **Settings > Right-click menu** adds user-level archive
 entries. **Open archive** opens normally; **Space-saving extraction** opens
 the consuming preview. Registration never starts extraction automatically.
