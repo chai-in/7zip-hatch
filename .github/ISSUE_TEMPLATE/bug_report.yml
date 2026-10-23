@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem with the app, CLI, or installer.
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For vulnerabilities, use private security reporting instead.
+        Do not attach private archives, passwords, tokens, or personal paths.
+        Preserve the archive and recovery side files if consuming extraction was interrupted.
+  - type: input
+    id: version
+    attributes:
+      label: Project version and package
+      description: Include the 7-Zip Hatch version and downloaded filename, or source commit.
+      placeholder: 0.2.0, Windows x64 setup
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and version
+      placeholder: Windows 11 x64, macOS Apple Silicon, Ubuntu 24.04 X11
+    validations:
+      required: true
+  - type: dropdown
+    id: operation
+    attributes:
+      label: Operation
+      options:
+        - Installation or desktop integration
+        - Browse or test an archive
+        - Ordinary extraction (source retained)
+        - Space-saving extraction, pause, or resume
+        - Partial restore
+        - Create an archive
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, archive format, and settings
+      description: Use a minimal disposable archive. Include solid-block, split-volume, or encryption details if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result
+      description: Include the exact error, relevant logs, or a redacted screenshot.
+    validations:
+      required: true

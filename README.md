@@ -1,166 +1,157 @@
-# 7zip-hatch
+<p align="center">
+  <img src="third_party/hatchzip/assets/icon/png/hatchzip-128.png" width="80" height="80" alt="7-Zip Hatch archive icon">
+</p>
 
-A 7-Zip fork with HatchZip's space-saving extraction engine linked into the
-same command-line executable, plus a desktop app for macOS, Windows, and Linux.
-It uses standard archive formats, including `.7z`.
+<h1 align="center">7-Zip Hatch</h1>
 
-Based on [7-Zip 26.05](https://github.com/ip7z/7zip) by Igor Pavlov and
-[HatchZip 0.1.2](https://github.com/xevrion/hatchzip) by its contributors.
-This is an independent project, not an official release of either upstream.
+<p align="center"><strong>Create, browse, and extract archives. Reclaim space as you extract.</strong></p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/chai-in/7zip-hatch/actions/workflows/ci.yml"><img src="https://github.com/chai-in/7zip-hatch/actions/workflows/ci.yml/badge.svg?branch=main" alt="Cross-platform CI"></a>
+  <a href="https://github.com/chai-in/7zip-hatch/actions/workflows/installers.yml"><img src="https://github.com/chai-in/7zip-hatch/actions/workflows/installers.yml/badge.svg?branch=main" alt="Installer checks"></a>
+  <a href="https://github.com/chai-in/7zip-hatch/releases/tag/v0.2.0"><img src="https://img.shields.io/badge/release-0.2.0_preview-blue" alt="0.2.0 desktop preview"></a>
+</p>
 
-Normal 7-Zip commands still work. The new `hatch` command extracts ZIP,
-7z, tar, and gzip-compressed tar while releasing consumed archive space.
-It includes HatchZip's space check, reserved free-space setting, passwords,
-verification, progress, interruption/resume, and partial-archive restore.
-Byte-split `.001`, `.002`, ... archives are supported.
+<p align="center">
+  <a href="#download">Download</a> |
+  <a href="#what-it-does">Features</a> |
+  <a href="Hatch/CLI.md">CLI guide</a> |
+  <a href="CONTRIBUTING.md">Contribute</a> |
+  <a href="https://github.com/chai-in/7zip-hatch/discussions">Questions</a>
+</p>
 
-The CLI engine is statically linked. The desktop app bundles that executable
-for ordinary 7-Zip operations and calls HatchZip's library for space-saving
-extraction. The original Windows File Manager also has a **Tools >
-Space-saving extraction** command that opens the desktop preview.
+7-Zip Hatch combines **7-Zip 26.05** with **HatchZip 0.1.2** and a desktop
+app for Windows, macOS, and Linux. Normal 7-Zip commands still work. The new
+space-saving mode extracts supported archives while releasing consumed source
+space, with a plan, confirmation, verification options, and recovery controls.
 
-## Desktop app
+Archives use standard formats, including `.7z`. No special archive reader is
+needed. This is an independent fork of [7-Zip](https://github.com/ip7z/7zip)
+and [HatchZip](https://github.com/xevrion/hatchzip), with their original notices
+and component licenses preserved.
 
-Open **7-Zip Hatch** like a normal application. On macOS, drag the app to
-Applications, then launch it from Finder or use **Open With** on an archive.
-On Windows, run the setup executable for Start menu entries, optional desktop
-and right-click shortcuts, and uninstall support. On Linux, make the AppImage
-executable and open it. This Linux build requires glibc 2.39 or newer.
-[Installer downloads and instructions](Hatch/installers/README.md) cover both
-platforms. Portable ZIP/tar packages remain available; keep all their binaries
-together when using those distributions.
+## Download
 
-- **Open archive** or drop an archive onto the window to browse entries,
-  choose the destination, compare space requirements, and test integrity.
-- **Extract** keeps the archive. It extracts into a temporary folder, then
-  publishes the result to a new or empty destination. Cancellation removes
-  partial output and retains the source.
-- **Space-saving extraction** enables HatchZip's consuming mode. Review the
-  space plan, reserved free space, and verify-first setting. Confirm before
-  starting. Pause/resume and rebuilding the remaining archive use the same
-  recovery journal as the CLI. Successful extraction removes the source.
-- **Compress files / Compress folder** creates 7z or ZIP with compression
-  level, method, dictionary, solid block size, threads, split volumes,
-  encryption, and advanced `-m` properties. Source files are retained.
-  ZIP encryption requires an ASCII password of at most 99 characters;
-  7z supports Unicode passwords and encrypted filenames.
+**Current release: [0.2.0 desktop preview](https://github.com/chai-in/7zip-hatch/releases/tag/v0.2.0).**
+Preview software should be evaluated with replaceable copies of archives.
+Ordinary extraction keeps the archive. Space-saving extraction is opt-in and
+consumes it; read [the limits](#before-using-space-saving-extraction) first.
 
-Archives unsupported by HatchZip use the native engine for ordinary
-extraction. Existing archive updating, arbitrary metadata switches, and
-individual-entry editing remain available through the original Windows
-File Manager and CLI. The cross-platform frontend currently creates new
-archives and extracts whole archives.
+| Platform | Recommended download | Requirements and installation |
+| --- | --- | --- |
+| Windows x64 | [Setup.exe](https://github.com/chai-in/7zip-hatch/releases/download/v0.2.0/7zip-hatch-0.2.0-windows-x64-setup.exe) | Windows 10/11. Per-user installation, Start menu entries, optional desktop/right-click shortcuts, and uninstall support. Unsigned. |
+| macOS Apple Silicon | [DMG](https://github.com/chai-in/7zip-hatch/releases/download/v0.2.0/7zip-hatch-0.2.0-macos-arm64.dmg) | Drag **7-Zip Hatch.app** to Applications. Ad hoc signed; not Apple-notarized. |
+| Linux x86-64 | [AppImage](https://github.com/chai-in/7zip-hatch/releases/download/v0.2.0/7zip-hatch-0.2.0-linux-x86_64.AppImage) | glibc 2.39+ and an X11/Wayland desktop, such as Ubuntu 24.04. Make executable, then launch. |
 
-See [desktop build and packaging instructions](Hatch/DESKTOP.md).
+[All downloads and portable packages](https://github.com/chai-in/7zip-hatch/releases/tag/v0.2.0)
+| [Install, remove, and verify downloads](Hatch/DOWNLOADS.md)
+| [SHA256SUMS](https://github.com/chai-in/7zip-hatch/releases/download/v0.2.0/SHA256SUMS)
+| [Application source bundle](https://github.com/chai-in/7zip-hatch/releases/download/v0.2.0/7zip-hatch-0.2.0-source-with-dependencies.tar.gz)
 
-## Build
-
-Requires Python 3, Rust 1.95.0 (rustup reads the pinned toolchain), a C/C++
-compiler, and make. Cargo downloads dependencies using the lockfile.
+On Linux:
 
 ```sh
-python3 Hatch/build.py
-build/release/7zz --help
-build/release/7zz hatch --help
+chmod +x 7zip-hatch-0.2.0-linux-x86_64.AppImage
+./7zip-hatch-0.2.0-linux-x86_64.AppImage
 ```
 
-On Windows x64, run `python Hatch/build.py` in a Visual Studio x64 Native
-Tools prompt; the output is `build/release/7zz.exe`. macOS requires Xcode
-Command Line Tools. Linux uses GCC and make.
+Without FUSE, add `--appimage-extract-and-run`. Windows setup includes both the
+new desktop app and the original 7-Zip File Manager. Its **Tools > Space-saving
+extraction** command opens the Hatch preview. Intel macOS and native ARM64
+Windows/Linux packages are not currently published.
 
-## Use
+## What it does
+
+![7-Zip Hatch browsing a ZIP archive in the Linux AppImage](Hatch/assets/desktop-linux.png)
+
+*The actual 0.2.0 AppImage opening an archive during its
+[desktop CI test](https://github.com/chai-in/7zip-hatch/actions/runs/40036590961).
+The archive is retained in the default extraction mode.*
+
+| Operation | Behavior |
+| --- | --- |
+| Browse and test | Open or drop an archive, inspect its entries, and check integrity. |
+| Ordinary extraction | Keeps the source archive. Stages output, then publishes it to a new or empty destination. Cancellation removes partial output. |
+| Space-saving extraction | Plans space use, asks for confirmation, and consumes supported ZIP, 7z, tar, and gzip-tar archives as output becomes durable. |
+| Create 7z or ZIP | Set compression level, codec, dictionary, solid blocks, threads, volumes, passwords, filename encryption, and advanced `-m` properties. Inputs are retained. |
+| Pause, resume, and partial restore | Continue a consuming session or rebuild its unextracted remainder using HatchZip's journal. Restore is not a full undo. |
+| Desktop integration | Finder Open With on macOS; user-level archive right-click entries on Windows and Linux. Registration opens a preview before consuming extraction. |
+| Original 7-Zip | Use `7zz` or the Windows File Manager for archive updates, selected-entry operations, and native metadata switches. |
+
+The cross-platform GUI creates new archives and extracts whole archives.
+The [desktop guide](Hatch/DESKTOP.md) explains its options and platform integration.
+
+## Before using space-saving extraction
+
+- **It changes and eventually removes the source archive.** Use ordinary
+  extraction when the original must be kept. Keep the journal and saved tail
+  beside a paused archive until extraction or restore finishes.
+- **Solid 7z blocks limit reclamation.** A block must finish decoding before
+  it can be released. One large block may need as much free space as ordinary
+  extraction. `-ms=64m` groups whole files; it does not split one huge file.
+- Reclaimed space helps the output only on the **same filesystem**.
+  Snapshots, clones, and filesystem behavior can delay actual reclamation.
+- Consuming mode supports fewer formats and metadata types than native
+  7-Zip. Hole punching is filesystem-dependent. Partial restore retains
+  extracted files and rebuilds the remaining archive; it cannot reconstruct
+  already consumed data and currently refuses encrypted 7z archives.
+
+See [format, filesystem, metadata, and recovery limits](Hatch/CLI.md#limits)
+before choosing consuming mode. The app's space plan describes the actual archive.
+
+## Command line
 
 ```sh
-# Normal 7-Zip commands and compression settings
+# Existing 7-Zip commands
 7zz a backup.7z files/
 7zz x backup.7z
 
-# Standard 7z with smaller solid blocks for space-saving extraction
-7zz a distribution.7z files/ -t7z -m0=lzma2 -ms=64m
+# Read-only space planning and integrity checking
+7zz hatch check backup.7z --keep-free 2GB
+7zz hatch test backup.7z
 
-# Read-only planning, listing, and integrity check
-7zz hatch check distribution.7z --keep-free 2GB
-7zz hatch list distribution.7z
-7zz hatch test distribution.7z
-
-# DESTRUCTIVE: the archive is consumed as files become durable
-7zz hatch extract distribution.7z -o extracted --verify-first --keep-free 2GB
-
-# Repeat extract to resume after interruption, or rebuild the remaining archive
-7zz hatch restore distribution.7z
+# Consumes the archive after confirmation; use a replaceable copy
+7zz hatch extract backup.7z -o extracted --verify-first --keep-free 2GB
 ```
 
-`hatch extract` asks before starting. Pass `--yes` for unattended use.
-It never overwrites an existing file; unrelated files in the destination
-are allowed. Keep `<archive>.hatchzip` and `<archive>.hatchzip-tail` until
-extraction or restore finishes. An incomplete consumed archive needs these
-side files and cannot be read independently by normal archive tools.
+Use `7zz.exe` on Windows. The native CLI is bundled with each desktop package.
+[The CLI guide](Hatch/CLI.md) covers passwords, resume, restore, exit codes,
+split volumes, and the full format limits. `7zz hatch <command> --help` lists
+the command's options.
 
-Passwords are prompted, or accepted with `--password` or `HATCHZIP_PASSWORD`.
-The hidden prompt avoids passwords in process arguments. Passwords are not
-journaled; resume asks again. `hatch` uses HatchZip's switches and exit codes,
-separately from 7-Zip: success 0, general failure 1, usage 2, insufficient
-space 3, verification failure 4, password failure 5, paused 130.
+## Documentation and contribution
 
-Use `7zz hatch <command> --help` for all options. The upstream `hatch man`
-and `hatch completions` generators are retained; their generated standalone
-`hatchzip` command names are not yet adapted for the `7zz hatch` prefix.
+- [Install, verify, and remove](Hatch/DOWNLOADS.md)
+- [Desktop features and builds](Hatch/DESKTOP.md)
+- [CLI use and limits](Hatch/CLI.md)
+- [Design and upstream source study](Hatch/DESIGN.md)
+- [Installer builds and validation](Hatch/installers/README.md)
+- [Changes](CHANGELOG.md), [contributing and development checks](CONTRIBUTING.md)
+- [Support](SUPPORT.md), [security reports](SECURITY.md), [code of conduct](CODE_OF_CONDUCT.md)
 
-## Limits
-
-- One solid 7z block must finish before it can be released. A single huge
-  block can need as much free space as ordinary extraction.
-- `-ms=64m` limits grouping of whole files. It does not split a huge file
-  into small independent blocks, so it is not a guaranteed space bound.
-- Large stored/Deflate ZIP entries, tar entries, and `.tar.gz` can release
-  bytes within a stream on filesystems supporting hole punching. This is
-  not yet implemented inside 7z blocks. FAT/exFAT use whole-unit truncation.
-- Reclaiming the source helps the output only on the same filesystem.
-  Snapshots/clones and filesystem behavior can delay actual reclamation.
-- Destructive mode does not cover every format normal 7-Zip can read.
-  RAR, native split `.z01` ZIP, `.tar.xz`, and `.tar.zst` are not supported
-  by the HatchZip engine; use ordinary extraction for them.
-- Restore retains extracted files and rebuilds the unextracted remainder.
-  It cannot undo already punched stream data, and currently refuses
-  encrypted 7z archives. It does not recreate the original full archive.
-- HatchZip metadata preservation differs from 7-Zip's. Use ordinary
-  extraction for Windows security descriptors, alternate streams, anti-items,
-  or special-file semantics unsupported by HatchZip.
-
-See [the source study and architecture](Hatch/DESIGN.md) for details.
-
-## Tests
-
-```sh
-python3 Hatch/build.py --debug
-python3 Hatch/test_integration.py build/debug/7zz --crash-tests
-
-# Run original HatchZip core/CLI tests through the combined executable
-cd third_party/hatchzip
-SEVENZIP_HATCH_BINARY="$(pwd)/../../build/debug/7zz" \
-  CARGO_TARGET_DIR="$(pwd)/../../build/hatch-target" \
-  cargo test --locked -p hatchzip -p hatchzip-core
-```
-
-Use `7zz.exe` and PowerShell environment syntax on Windows. Crash tests
-intentionally abort child processes at journal boundaries and verify resumed
-output byte for byte. Tests create only disposable archives. CI builds and
-tests on Linux, macOS, and Windows; its actual results establish support.
+Bug reports, reproducible archive fixtures, documentation fixes, accessibility
+improvements, and reviewed code changes are welcome. Start with
+[contributing](CONTRIBUTING.md) or ask in [Discussions](https://github.com/chai-in/7zip-hatch/discussions).
 
 ## Free software and attribution
 
-7-Zip and the integration use **LGPL-2.1-or-later**, with upstream BSD and
-public-domain exceptions preserved. HatchZip is **MIT OR Apache-2.0**.
-The complete Slint desktop executable is distributed under **GPL-3.0**;
-its original MIT/Apache components retain their notices. The separate CLI
-retains LGPL terms. See [desktop licensing](Hatch/DESKTOP.md#licensing),
-[LICENSE](LICENSE), [NOTICE](NOTICE),
-[7-Zip's license](DOC/License.txt), and [HatchZip's licenses](third_party/hatchzip/LICENSE-MIT).
+| Component | License |
+| --- | --- |
+| Complete Slint desktop application | [GPL-3.0](Hatch/COPYING-GPL-3.0.txt) |
+| Separate 7-Zip CLI, Windows File Manager, and integration | [LGPL-2.1-or-later](LICENSE), with original BSD/public-domain exceptions and notices |
+| Original HatchZip component sources | [MIT](third_party/hatchzip/LICENSE-MIT) OR [Apache-2.0](third_party/hatchzip/LICENSE-APACHE) |
+| Bundled dependencies | Their own notices, included in each binary package |
 
-Default builds exclude RAR decompression codecs carrying the unRAR
-restriction, using 7-Zip's `DISABLE_RAR_COMPRESS`. RAR listing and stored
-entries remain available. `python3 Hatch/build.py --with-rar` opts into
-those codecs under their original additional terms; it is not the default
-FOSS distribution. All original source notices are retained.
+Default FOSS builds exclude RAR decompression codecs carrying the unRAR
+restriction. RAR listing and stored entries remain available; other RAR
+extraction may require a different tool. An explicit `--with-rar` source
+build opts into the original additional terms.
+
+Credit belongs to Igor Pavlov and the 7-Zip contributors, Yash Bavadiya and
+the HatchZip contributors, and the projects whose dependencies make this
+application possible. See [NOTICE](NOTICE) and [the original 7-Zip notices](DOC/License.txt).
+No upstream ownership or endorsement is implied.
+
+Release source bundles include the committed application tree, locked Cargo
+sources, and corresponding sources for added AppImage libraries. See
+[release and source provenance](Hatch/DOWNLOADS.md#source-and-build-provenance).
