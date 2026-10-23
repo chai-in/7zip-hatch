@@ -113,10 +113,9 @@ def build():
         shutil.copy2(ROOT / "README.md", resources / "README.md")
         # Finder/iCloud can attach FinderInfo as soon as a known .app path
         # reappears. It is build-folder metadata and prevents code signing.
-        for file in [app, *app.rglob("*")]:
-            for attribute in os.listxattr(file):
-                if attribute in ("com.apple.FinderInfo", "com.apple.ResourceFork"):
-                    os.removexattr(file, attribute)
+        for attribute in ("com.apple.FinderInfo", "com.apple.ResourceFork"):
+            subprocess.run(["xattr", "-r", "-d", attribute, str(app)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(app)], check=True)
         subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
         print(f"Built {app}")
