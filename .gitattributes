@@ -1,2 +1,8 @@
 *.dsp text eol=crlf
 *.dsw text eol=crlf
+
+# The extraction core remains vendored; this fork maintains the desktop UI
+# and shell integration. Reflect that distinction in GitHub language stats.
+third_party/hatchzip/** linguist-vendored
+third_party/hatchzip/crates/gui/** linguist-vendored=false
+third_party/hatchzip/crates/shell/** linguist-vendored=false
