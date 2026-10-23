@@ -93,7 +93,23 @@ Matching checksums confirm that the downloaded bytes match the published
 release asset. They are not a separate publisher signature. The Windows
 preview is unsigned; macOS uses an ad hoc signature.
 
+With a recent GitHub CLI, the release's GitHub-signed attestation can also be
+verified. The second command checks the actual local file against that record;
+replace the filename with the package downloaded for the current platform.
+
+```sh
+gh release verify v0.2.0 --repo chai-in/7zip-hatch
+gh release verify-asset v0.2.0 ./7zip-hatch-0.2.0-linux-x86_64.AppImage --repo chai-in/7zip-hatch
+```
+
+This verifies the release record and asset integrity. It does not replace
+Windows Authenticode or Apple Developer ID signing, or prove how a binary
+was built. The source revisions and validating CI are recorded separately.
+
 ## Source and build provenance
+
+The published 0.2.0 preview is now immutable. Its assets and tag are fixed;
+new binary or source-bundle additions require a new release version.
 
 - `7zip-hatch-0.2.0-source-with-dependencies.tar.gz` includes the application
   source, locked Cargo dependency sources, vendor configuration, and installer
