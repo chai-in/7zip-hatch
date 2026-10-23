@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/chai-in/7zip-hatch/discussions
+    about: Ask questions and discuss ideas before filing a concrete issue.
+  - name: Report a security vulnerability privately
+    url: https://github.com/chai-in/7zip-hatch/security/advisories/new
+    about: Keep vulnerabilities and sensitive archives out of public issues.
+  - name: Installation, verification, and support
+    url: https://github.com/chai-in/7zip-hatch/blob/main/SUPPORT.md
+    about: Find platform requirements, download checksums, and recovery guidance.

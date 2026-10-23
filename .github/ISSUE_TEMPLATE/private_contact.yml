@@ -1,0 +1,18 @@
+name: Request a private conduct contact
+description: Ask for a private channel without posting incident details publicly.
+title: Private conduct contact requested
+labels: [contact-request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is PUBLIC. Do not include names, incident details, or private contact information.
+        Submit only the acknowledgment below so the maintainer can arrange a private channel.
+        Security vulnerabilities should use the private security report form instead.
+  - type: checkboxes
+    id: acknowledgment
+    attributes:
+      label: Public contact request
+      options:
+        - label: I am requesting a private channel and have included no incident details here.
+          required: true

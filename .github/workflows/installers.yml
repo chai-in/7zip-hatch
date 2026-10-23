@@ -17,13 +17,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: installers-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   windows:
     name: Windows setup install and uninstall
     runs-on: windows-2025
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Download and verify tested desktop payload
@@ -35,7 +39,7 @@ jobs:
       - name: Install, run both GUIs, test engines, reinstall and uninstall
         run: Hatch/installers/windows/test_setup.ps1 build/packages/7zip-hatch-0.2.0-windows-x64-setup.exe build/installers/payload/7zip-hatch
       - name: Upload tested installer
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: 7zip-hatch-Windows-setup
           path: build/packages/*-setup.exe
@@ -46,7 +50,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Packaging and graphical test dependencies
@@ -67,7 +71,7 @@ jobs:
         run: |
           xvfb-run -a sh -c 'openbox >/tmp/openbox.log 2>&1 & python3 Hatch/installers/linux/test_appimage.py build/packages/7zip-hatch-0.2.0-linux-x86_64.AppImage build/installers/payload/7zip-hatch'
       - name: Upload tested AppImage and source bundle
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: 7zip-hatch-Linux-AppImage
           path: build/packages/*

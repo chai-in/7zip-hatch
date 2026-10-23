@@ -14,8 +14,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Select checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.changes.outputs.code }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select native checks conservatively
+        id: changes
+        env:
+          CI_EVENT: ${{ github.event_name }}
+          CI_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CI_HEAD: ${{ github.sha }}
+        run: python3 Hatch/ci_changes.py
+
   build-test:
     name: ${{ matrix.os }}
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +47,7 @@ jobs:
       CARGO_TARGET_DIR: ${{ github.workspace }}/build/hatch-target
       MACOSX_DEPLOYMENT_TARGET: "11.0"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Linux desktop dependencies
@@ -36,6 +57,14 @@ jobs:
           sudo apt-get install -y pkg-config libfontconfig1-dev
       - name: Install pinned Rust tools
         run: rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+      - name: Cache verified Cargo downloads
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-${{ runner.os }}-${{ runner.arch }}-1.95-${{ hashFiles('third_party/hatchzip/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-${{ runner.arch }}-1.95-
       - name: Desktop packaging regression checks
         run: python Hatch/test_packaging.py
       - name: Format
@@ -94,7 +123,7 @@ jobs:
       - name: Package desktop
         run: python Hatch/package_desktop.py
       - name: Upload desktop
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: 7zip-hatch-${{ runner.os }}-${{ runner.arch }}
           path: build/packages/*
@@ -102,10 +131,12 @@ jobs:
 
   windows-file-manager:
     name: Windows File Manager
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: windows-2025
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
       - name: Compile native File Manager with the Hatch menu
@@ -114,3 +145,26 @@ jobs:
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
           cd CPP\7zip\Bundles\Fm
           nmake /nologo /f makefile PLATFORM=x64 O=hatch-desktop-x64-ci DISABLE_RAR_COMPRESS=1
+
+  complete:
+    name: CI
+    needs: [changes, build-test, windows-file-manager]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every selected check
+        env:
+          SELECTION: ${{ needs.changes.result }}
+          NATIVE: ${{ needs.changes.outputs.code }}
+          BUILDS: ${{ needs.build-test.result }}
+          FILE_MANAGER: ${{ needs.windows-file-manager.result }}
+        run: |
+          python3 - <<'PY'
+          import os
+          assert os.environ['SELECTION'] == 'success', 'Check selection failed'
+          expected = 'success' if os.environ['NATIVE'] == 'true' else 'skipped'
+          assert os.environ['BUILDS'] == expected, 'A selected native build failed or was cancelled'
+          assert os.environ['FILE_MANAGER'] == expected, 'The File Manager build failed or was cancelled'
+          print('All selected checks passed; documentation uses the repository checks.')
+          PY
