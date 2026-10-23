@@ -66,7 +66,9 @@ On Ubuntu 24.04 x86-64, install `desktop-file-utils`, `patchelf`, `file`,
 `curl`, `python3`, `libfontconfig1`, `libfreetype6`, `libstdc++6`,
 `libxkbcommon-x11-0`, `libwayland-client0`, `libwayland-cursor0` and
 `libwayland-egl1`. Enable `deb-src` repositories matching the installed
-libraries. Then:
+libraries. Update the bundled libraries to their current repository versions,
+as listed in the workflow, so each binary has an available matching source
+package. The builder refuses to substitute a different source version. Then:
 
 ```sh
 python3 Hatch/prepare_installer_payload.py linux
