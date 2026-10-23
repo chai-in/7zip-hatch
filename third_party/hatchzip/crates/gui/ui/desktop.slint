@@ -1,0 +1,113 @@
+import { Button, CheckBox, ComboBox, LineEdit, ProgressIndicator, ScrollView, Palette } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+
+export component NativeTaskWindow inherits Window {
+    in property <string> heading;
+    in property <string> detail;
+    in property <string> message: "Starting…";
+    in property <float> fraction;
+    in property <bool> complete;
+    in property <bool> failed;
+    callback cancel();
+    callback dismiss();
+    callback open-folder();
+    title: "7-Zip Hatch";
+    preferred-width: 560px;
+    min-width: 440px;
+    background: Palette.background;
+    VerticalLayout {
+        padding: 24px;
+        spacing: 14px;
+        Text { text: root.heading; font-size: 18px; font-weight: 600; wrap: word-wrap; }
+        Text { text: root.detail; color: Theme.muted; wrap: word-wrap; }
+        ProgressIndicator { progress: root.fraction; indeterminate: !root.complete && root.fraction == 0; }
+        Text { text: root.message; color: root.failed ? Theme.danger : Palette.foreground; wrap: word-wrap; }
+        HorizontalLayout {
+            alignment: end;
+            spacing: 8px;
+            if root.complete && !root.failed: Button { text: "Open folder"; clicked => { root.open-folder(); } }
+            Button {
+                text: root.complete ? "Close" : "Cancel";
+                primary: root.complete;
+                clicked => { if root.complete { root.dismiss(); } else { root.cancel(); } }
+            }
+        }
+    }
+}
+
+export component CreateWindow inherits Window {
+    in property <string> inputs;
+    in-out property <string> destination;
+    in-out property <int> format-index;
+    in-out property <int> level-index: 3;
+    in-out property <int> method-index;
+    in-out property <int> dictionary-index;
+    in-out property <int> solid-index: 2;
+    in-out property <int> threads-index;
+    in-out property <string> volume;
+    in-out property <string> password;
+    in-out property <bool> encrypt-headers: true;
+    in-out property <string> advanced;
+    in property <string> error;
+    callback browse();
+    callback create();
+    callback cancel();
+    callback format-changed();
+    title: "Create archive - 7-Zip Hatch";
+    preferred-width: 670px;
+    preferred-height: 690px;
+    min-width: 590px;
+    min-height: 640px;
+    background: Palette.background;
+    VerticalLayout {
+        padding: 24px;
+        spacing: 12px;
+        Text { text: "Create archive"; font-size: 20px; font-weight: 600; }
+        Text { text: root.inputs; color: Theme.muted; wrap: word-wrap; max-height: 60px; overflow: elide; }
+        HorizontalLayout {
+            spacing: 8px;
+            LineEdit { text <=> root.destination; horizontal-stretch: 1; }
+            Button { text: "Save as…"; clicked => { root.browse(); } }
+        }
+        GridLayout {
+            spacing: 12px;
+            Row {
+                Text { text: "Format"; vertical-alignment: center; }
+                ComboBox { model: ["7z", "ZIP"]; current-index <=> root.format-index; selected(_) => { root.method-index = 0; root.format-changed(); } }
+                Text { text: "Compression"; vertical-alignment: center; }
+                ComboBox { model: ["Store", "Fastest", "Fast", "Normal", "Maximum", "Ultra"]; current-index <=> root.level-index; }
+            }
+            Row {
+                Text { text: "Method"; vertical-alignment: center; }
+                ComboBox { model: root.format-index == 0 ? ["LZMA2", "LZMA", "BZip2", "PPMd", "Copy"] : ["Deflate", "BZip2", "LZMA", "PPMd", "Copy"]; current-index <=> root.method-index; }
+                Text { text: "Dictionary"; vertical-alignment: center; }
+                ComboBox { enabled: root.format-index == 0 ? root.method-index <= 1 : root.method-index == 2; model: ["Automatic", "8 MB", "16 MB", "32 MB", "64 MB", "128 MB"]; current-index <=> root.dictionary-index; }
+            }
+            Row {
+                Text { text: "Solid block"; vertical-alignment: center; }
+                ComboBox { enabled: root.format-index == 0; model: ["Non-solid", "16 MB", "64 MB", "256 MB", "1 GB", "Unlimited"]; current-index <=> root.solid-index; }
+                Text { text: "CPU threads"; vertical-alignment: center; }
+                ComboBox { model: ["Automatic", "1", "2", "4", "8", "16", "32"]; current-index <=> root.threads-index; }
+            }
+            Row {
+                Text { text: "Split volumes"; vertical-alignment: center; }
+                LineEdit { text <=> root.volume; placeholder-text: "Optional, e.g. 256m"; }
+            }
+        }
+        Text { text: "Smaller solid blocks reduce the extra space needed for space-saving extraction. A single large file can still need a larger block."; color: Theme.muted; wrap: word-wrap; font-size: Theme.small-size; }
+        Text { text: "Encryption"; font-weight: 600; }
+        LineEdit { text <=> root.password; input-type: InputType.password; placeholder-text: "Password (optional)"; }
+        CheckBox { text: "Encrypt filenames"; enabled: root.format-index == 0; checked <=> root.encrypt-headers; }
+        Text { text: "Advanced compression properties"; font-weight: 600; }
+        LineEdit { text <=> root.advanced; placeholder-text: "Optional: -m0=BCJ -m1=LZMA2"; }
+        Text { text: "Source files are kept. Passwords are never saved in settings."; color: Theme.muted; wrap: word-wrap; }
+        if root.error != "": Text { text: root.error; color: Theme.danger; wrap: word-wrap; }
+        Rectangle { vertical-stretch: 1; }
+        HorizontalLayout {
+            alignment: end;
+            spacing: 8px;
+            Button { text: "Cancel"; clicked => { root.cancel(); } }
+            Button { text: "Create"; primary: true; clicked => { root.create(); } }
+        }
+    }
+}

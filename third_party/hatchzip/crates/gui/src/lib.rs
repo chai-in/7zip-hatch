@@ -4,8 +4,10 @@
 
 pub mod args;
 pub mod backend;
+mod desktop;
 mod entries;
 pub mod main_window;
+pub mod native;
 mod password;
 mod platform;
 mod runner;
@@ -20,4 +22,4 @@ slint::include_modules!();
 
 /// The desktop file name packaging installs, which Wayland and X11 use to
 /// match the window to its launcher entry and icon.
-pub const APP_ID: &str = "io.github.xevrion.hatchzip";
+pub const APP_ID: &str = "io.github.chai-in.7zip-hatch";

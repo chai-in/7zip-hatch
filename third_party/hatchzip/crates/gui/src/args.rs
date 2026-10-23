@@ -7,11 +7,13 @@ use clap::{ArgGroup, Parser};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "hatchzip-gui",
+    name = "7zip-hatch",
     version,
-    about = "Extract large archives in place, removing the archive progressively.",
+    about = "Create, browse, and extract archives with 7-Zip and optional space-saving extraction.",
     group(ArgGroup::new("what").args([
         "archive",
+        "open",
+        "space_saving",
         "extract_here",
         "extract_to",
         "test",
@@ -22,6 +24,12 @@ use clap::{ArgGroup, Parser};
 pub struct Args {
     /// The archive to open, or any part of a split archive
     pub archive: Option<PathBuf>,
+    /// Open an archive from a desktop file manager
+    #[arg(long, value_name = "ARCHIVE")]
+    pub open: Option<PathBuf>,
+    /// Open an archive with space-saving extraction selected, awaiting confirmation
+    #[arg(long, value_name = "ARCHIVE")]
+    pub space_saving: Option<PathBuf>,
     /// Extract into the folder the archive is in
     #[arg(long, value_name = "ARCHIVE")]
     pub extract_here: Option<PathBuf>,
@@ -50,6 +58,7 @@ pub enum TaskKind {
 pub enum Launch {
     /// The main window, empty or with an archive open.
     Main(Option<PathBuf>),
+    SpaceSaving(PathBuf),
     /// A small window that runs one task, started from a right-click.
     Task(TaskKind, PathBuf),
     /// Installers run these; no window opens.
@@ -63,6 +72,8 @@ impl Args {
             Launch::RegisterShell
         } else if self.unregister_shell {
             Launch::UnregisterShell
+        } else if let Some(a) = self.space_saving {
+            Launch::SpaceSaving(a)
         } else if let Some(a) = self.extract_here {
             Launch::Task(TaskKind::ExtractHere, a)
         } else if let Some(a) = self.extract_to {
@@ -70,7 +81,7 @@ impl Args {
         } else if let Some(a) = self.test {
             Launch::Task(TaskKind::Test, a)
         } else {
-            Launch::Main(self.archive)
+            Launch::Main(self.open.or(self.archive))
         }
     }
 }

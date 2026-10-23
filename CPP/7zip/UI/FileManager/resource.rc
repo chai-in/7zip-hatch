@@ -141,6 +141,8 @@ BEGIN
   END
   POPUP "&Tools" MY_MENUITEM_ID(IDM_TOOLS)
   BEGIN
+    MENUITEM "Space-saving extraction...",  IDM_HATCH_EXTRACT
+    MY_MENUITEM_SEPARATOR
     MENUITEM "&Options...",                 IDM_OPTIONS
     MY_MENUITEM_SEPARATOR
     MENUITEM "&Benchmark",                  IDM_BENCHMARK

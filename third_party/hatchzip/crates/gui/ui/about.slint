@@ -6,7 +6,7 @@ export component AboutWindow inherits Window {
     callback open-link();
     callback dismiss();
 
-    title: "About HatchZip";
+    title: "About 7-Zip Hatch";
     preferred-width: 420px;
     min-width: 380px;
     background: Palette.background;
@@ -29,7 +29,7 @@ export component AboutWindow inherits Window {
                 alignment: center;
                 spacing: 2px;
                 Text {
-                    text: "HatchZip";
+                    text: "7-Zip Hatch";
                     font-size: 20px;
                     font-weight: 600;
                 }
@@ -44,12 +44,12 @@ export component AboutWindow inherits Window {
             wrap: word-wrap;
         }
         Text {
-            text: "Licensed under MIT or Apache-2.0";
+            text: "Desktop distribution: GPLv3. Includes 7-Zip and HatchZip; see bundled license notices.";
             color: Theme.muted;
             wrap: word-wrap;
         }
         link := Text {
-            text: "github.com/xevrion/hatchzip";
+            text: "github.com/chai-in/7zip-hatch";
             color: Palette.accent-background;
             TouchArea {
                 mouse-cursor: pointer;

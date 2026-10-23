@@ -1,5 +1,8 @@
 use std::path::PathBuf;
 
+pub const ENGINE_NAME: &str = "7zz";
+pub fn quiet_command(_command: &mut std::process::Command) {}
+
 /// The settings switch, named after this system's file manager.
 pub const SHELL_MENU_LABEL: &str = "Show in the file manager's context menu";
 
@@ -12,5 +15,7 @@ pub fn config_dir() -> Option<PathBuf> {
         Some(d) => PathBuf::from(d),
         None => std::env::home_dir()?.join(".config"),
     };
-    Some(base.join("hatchzip"))
+    Some(base.join("7zip-hatch"))
 }
+
+pub fn install_open_documents(_drops: std::rc::Rc<crate::backend::Drops>) {}

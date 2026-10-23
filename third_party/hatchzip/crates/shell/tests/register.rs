@@ -23,7 +23,7 @@ fn linux_menus_point_at_the_gui_and_go_away_cleanly() {
     register(&dirs, gui).unwrap();
     assert!(is_registered(&dirs));
 
-    let kde = tmp.path().join("kio/servicemenus/hatchzip.desktop");
+    let kde = tmp.path().join("kio/servicemenus/7zip-hatch.desktop");
     let text = std::fs::read_to_string(&kde).unwrap();
     for a in ACTIONS {
         assert!(
@@ -37,12 +37,14 @@ fn linux_menus_point_at_the_gui_and_go_away_cleanly() {
         0o111
     );
 
-    let script = tmp.path().join("nautilus/scripts/HatchZip - Extract here");
+    let script = tmp
+        .path()
+        .join("nautilus/scripts/7-Zip Hatch - Open archive");
     let text = std::fs::read_to_string(&script).unwrap();
-    assert!(text.contains("'/opt/Hatch Zip/it'\\''s/hatchzip-gui' --extract-here"));
+    assert!(text.contains("'/opt/Hatch Zip/it'\\''s/hatchzip-gui' --open"));
     assert!(std::fs::metadata(&script).unwrap().permissions().mode() & 0o100 != 0);
 
-    let nemo = tmp.path().join("nemo/actions/hatchzip-test.nemo_action");
+    let nemo = tmp.path().join("nemo/actions/7zip-hatch-test.nemo_action");
     assert!(
         std::fs::read_to_string(&nemo)
             .unwrap()
@@ -88,9 +90,12 @@ fn explorer_menu_points_at_the_gui_and_goes_away_cleanly() {
     assert!(is_registered(&dirs));
     for ext in hatchzip_shell::EXTENSIONS {
         let menu = hkcu
-            .open_subkey(format!(r"{base}\.{ext}\shell\HatchZip"))
+            .open_subkey(format!(r"{base}\.{ext}\shell\7zipHatch"))
             .unwrap();
-        assert_eq!(menu.get_value::<String, _>("MUIVerb").unwrap(), "HatchZip");
+        assert_eq!(
+            menu.get_value::<String, _>("MUIVerb").unwrap(),
+            "7-Zip Hatch"
+        );
         for (i, a) in ACTIONS.iter().enumerate() {
             let cmd = menu
                 .open_subkey(format!(r"shell\{:02}{}\command", i + 1, a.id))
@@ -105,7 +110,7 @@ fn explorer_menu_points_at_the_gui_and_goes_away_cleanly() {
     assert!(!is_registered(&dirs));
     for ext in hatchzip_shell::EXTENSIONS {
         assert!(
-            hkcu.open_subkey(format!(r"{base}\.{ext}\shell\HatchZip"))
+            hkcu.open_subkey(format!(r"{base}\.{ext}\shell\7zipHatch"))
                 .is_err()
         );
     }

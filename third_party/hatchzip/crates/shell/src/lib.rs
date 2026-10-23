@@ -20,14 +20,14 @@ pub struct Action {
 
 pub const ACTIONS: &[Action] = &[
     Action {
-        id: "extract-here",
-        label: "Extract here",
-        flag: "--extract-here",
+        id: "open",
+        label: "Open archive",
+        flag: "--open",
     },
     Action {
         id: "extract-to",
-        label: "Extract to a new folder",
-        flag: "--extract-to",
+        label: "Space-saving extraction",
+        flag: "--space-saving",
     },
     Action {
         id: "test",

@@ -18,6 +18,7 @@ pub const DEFAULT_KEEP_FREE: u64 = 2_000_000_000;
 pub struct Settings {
     pub keep_free: u64,
     pub verify_first: bool,
+    pub space_saving: bool,
 }
 
 impl Default for Settings {
@@ -25,6 +26,7 @@ impl Default for Settings {
         Self {
             keep_free: DEFAULT_KEEP_FREE,
             verify_first: false,
+            space_saving: false,
         }
     }
 }
@@ -95,6 +97,7 @@ mod tests {
         let s = Settings {
             keep_free: 500_000_000,
             verify_first: true,
+            space_saving: false,
         };
         s.save_to(&path).unwrap();
         assert_eq!(Settings::load_from(&path), s);
@@ -114,7 +117,8 @@ mod tests {
             Settings::load_from(&path),
             Settings {
                 keep_free: DEFAULT_KEEP_FREE,
-                verify_first: true
+                verify_first: true,
+                space_saving: false,
             }
         );
     }

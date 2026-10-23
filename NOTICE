@@ -13,6 +13,9 @@ Upstream commit: d8a4edbc9ec8ef84540e42408916a409a7d3c21b
 Licenses: third_party/hatchzip/LICENSE-MIT and LICENSE-APACHE
 
 Local changes: static-library CLI entry point, native command dispatch,
-build tooling, integration tests, documentation, and CI.
+build tooling, integration tests, documentation, CI, the desktop GUI,
+OS desktop packaging/registration, and a Windows File Manager menu entry.
+The complete Slint desktop app is distributed under GPL-3.0. Component
+sources retain their original licenses. See Hatch/COPYING-GPL-3.0.txt.
 The extraction engine, storage, journal, and format implementation are
 vendored without changes at the above commit.

@@ -25,3 +25,25 @@ both debug and release executables. Consult its actual status for those
 platforms. Local tests do not establish Windows/Linux behavior, measured
 near-full-volume performance, exact memory bounds, or immunity to hardware
 failure. No new minimum-space or throughput benchmark is claimed.
+
+## Desktop integration 0.2.0
+
+Local macOS arm64 validation additionally covers:
+
+- GUI and shell tests, including real native archive operations and the
+  complete headless UI flow in light and dark themes.
+- GUI extraction confirmation, pause/resume, passwords, partial restore,
+  ordinary extraction with source retention, and archive creation.
+- Native encrypted 7z/ZIP round trips, Unicode filenames, split volumes,
+  compressed tar streaming, cancellation cleanup, collision refusal, and
+  creating an archive inside its input folder without including staging.
+- Rust formatting and workspace Clippy with warnings denied.
+- The packaged `.app` launched through the desktop, used the native file
+  picker, created an archive, and ordinarily extracted a disposable ZIP.
+- Finder Open With opened an archive both during a running session and
+  while launching the app. The consuming confirmation was visually checked.
+- Screenshots of light/dark UI states were inspected for layout.
+
+The Windows File Manager menu is compiled by CI. Local macOS UI checks do
+not establish Windows Explorer behavior or Linux desktop integration.
+Desktop signing is ad hoc on macOS; no Apple notarization is claimed.

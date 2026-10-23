@@ -128,9 +128,9 @@ hole-punch capability by measuring a scratch file's physical allocation.
 | Partial-archive restore | Original behavior | Upstream ZIP/7z/tar restore within its limits |
 | Existing output files | Original overwrite options | Refuse collisions, allow unrelated files |
 | Parallel work | Original behavior | Rayon batches plus decoder threads |
-| GUI/settings/shell | Source retained | Separate UI retained; no unified UI yet |
+| GUI/settings/shell | Original Windows File Manager plus new desktop frontend | Space preview, confirmation, reserve/verification settings, pause/resume/restore |
 
-HatchZip's GUI persists only `keep_free` and `verify_first`. The CLI takes
+The desktop GUI persists `keep_free`, `verify_first`, and the selected extraction mode. The CLI takes
 these as options. The journal stores operational recovery state, not
 general preferences. GUI pause/resume calls the same core APIs.
 
@@ -162,10 +162,28 @@ and maintenance obligations. Replacing Rust codec adapters with 7-Zip
 callbacks later would require a unit/stream/metadata bridge. Rewriting
 the transaction engine in C++ first would create avoidable recovery risk.
 
+## Desktop integration
+
+The Slint desktop frontend uses the unchanged core session API for consuming
+operations and invokes a bundled `7zz` for ordinary extraction, testing, and
+archive creation. Native operations pass argument arrays, drain both output
+streams, and send passwords over a private stdin pipe. Creation stages
+archives beside the destination and publishes without overwriting files.
+Extraction stages output before publishing to an empty destination;
+compressed tar is streamed through two native processes to avoid a second
+full-size intermediate archive.
+
+The default is ordinary extraction. Consuming mode requires an explicit
+confirmation. Saved mode preferences do not bypass that confirmation.
+Unsupported consuming formats retain ordinary extraction. Windows shell
+actions and the File Manager menu open the preview rather than immediately
+mutating an archive. macOS handles Finder Open With through Apple Events.
+
 ## Future work, not implemented claims
 
-1. Wire the session API into Windows File Manager/Explorer controls and
-   expose persistent settings without building shell command strings.
+1. Extend the desktop archive browser with selected-entry extraction and
+   updating existing archives. The Windows File Manager currently opens
+   the consuming preview in the bundled desktop frontend.
 2. Add restart/reclaim inside 7z blocks for huge files. LZMA2 full
    dictionary/state resets are candidates; arbitrary chunk boundaries
    are insufficient. Filters, BCJ2's streams, AES chaining, file offsets,

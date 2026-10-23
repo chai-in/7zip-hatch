@@ -15,7 +15,7 @@ use crate::{ACTIONS, Dirs, EXTENSIONS};
 const BASE: &str = r"Software\Classes\SystemFileAssociations";
 
 fn menu_key(ext: &str) -> String {
-    format!(r"{BASE}\.{ext}\shell\HatchZip")
+    format!(r"{BASE}\.{ext}\shell\7zipHatch")
 }
 
 pub fn current_dirs() -> Result<Dirs> {
@@ -33,7 +33,7 @@ pub fn register(_dirs: &Dirs, gui: &Path) -> Result<Vec<String>> {
         let (menu, _) = hkcu
             .create_subkey(&path)
             .with_context(|| format!("creating HKCU\\{path}"))?;
-        menu.set_value("MUIVerb", &"HatchZip")?;
+        menu.set_value("MUIVerb", &"7-Zip Hatch")?;
         menu.set_value("Icon", &format!("\"{exe}\",0"))?;
         // An empty SubCommands value turns the entry into a submenu built
         // from its own `shell` key.

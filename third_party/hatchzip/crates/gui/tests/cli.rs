@@ -18,7 +18,7 @@ fn register_and_unregister_without_a_window() {
         return;
     }
     let data = tempfile::tempdir().unwrap();
-    let menu = data.path().join("kio/servicemenus/hatchzip.desktop");
+    let menu = data.path().join("kio/servicemenus/7zip-hatch.desktop");
 
     let out = gui()
         .arg("--register-shell")
@@ -28,7 +28,7 @@ fn register_and_unregister_without_a_window() {
         .unwrap();
     assert!(out.status.success(), "{out:?}");
     let printed = String::from_utf8(out.stdout).unwrap();
-    assert!(printed.contains("hatchzip.desktop"), "{printed}");
+    assert!(printed.contains("7zip-hatch.desktop"), "{printed}");
     let entry = std::fs::read_to_string(&menu).unwrap();
     assert!(
         entry.contains(env!("CARGO_BIN_EXE_hatchzip-gui")),
@@ -58,7 +58,7 @@ fn an_appimage_registers_itself_not_its_mount() {
         .unwrap();
     assert!(out.status.success(), "{out:?}");
     let entry =
-        std::fs::read_to_string(data.path().join("kio/servicemenus/hatchzip.desktop")).unwrap();
+        std::fs::read_to_string(data.path().join("kio/servicemenus/7zip-hatch.desktop")).unwrap();
     assert!(
         entry.contains("/home/sam/Apps/HatchZip-x86_64.AppImage"),
         "{entry}"

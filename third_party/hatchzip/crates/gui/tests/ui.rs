@@ -172,7 +172,15 @@ fn main_window_flow(scheme: ColorScheme, tag: &str) {
 
     ui.set_verify_first(true);
     ui.invoke_verify_first_toggled();
+    ui.set_space_saving(true);
+    ui.invoke_extraction_mode_changed();
     ui.invoke_extract();
+    assert!(ui.get_confirm_consume());
+    assert!(
+        archive.exists(),
+        "confirmation must precede any archive mutation"
+    );
+    ui.invoke_confirm_extract();
     let w = ui.as_weak();
     wait_until("the extraction", move || {
         w.unwrap().get_task().phase == Phase::Done
@@ -200,6 +208,55 @@ fn main_window_flow(scheme: ColorScheme, tag: &str) {
     about.window().set_size(LogicalSize::new(420.0, 470.0));
     shot(about.window(), &format!("{tag}-6-about"));
     about.hide().unwrap();
+    ui.hide().unwrap();
+}
+
+fn normal_desktop_flow(scheme: ColorScheme, tag: &str) {
+    let dir = tempfile::tempdir().unwrap();
+    let archive = make_zip(dir.path());
+    let drops = Drops::default();
+    let ui = main_window::build(Some(archive.clone()), &drops, Settings::default(), None).unwrap();
+    ui.global::<Palette>().set_color_scheme(scheme);
+    let w = ui.as_weak();
+    wait_until("ordinary extraction to become ready", move || {
+        w.unwrap().get_screen() == Screen::Opened && w.unwrap().get_plan().ready
+    });
+    assert!(
+        !ui.get_space_saving(),
+        "ordinary extraction is the safe default"
+    );
+    ui.invoke_extract();
+    wait_until("ordinary extraction", || {
+        main_window::native_window().is_some_and(|w| w.get_complete())
+    });
+    let job = main_window::native_window().unwrap();
+    assert!(!job.get_failed(), "{}", job.get_message());
+    assert!(
+        archive.exists(),
+        "ordinary extraction must retain its input"
+    );
+    assert!(dir.path().join("northwind/Northwind/README.txt").is_file());
+    shot(job.window(), &format!("{tag}-ordinary-extracted"));
+    job.hide().unwrap();
+    let source = dir.path().join("desktop-note.txt");
+    std::fs::write(&source, b"created through GUI callbacks").unwrap();
+    let create = main_window::create_for_paths(vec![source.clone()]).unwrap();
+    create.global::<Palette>().set_color_scheme(scheme);
+    let made = dir.path().join("created.7z");
+    create.set_destination(made.display().to_string().into());
+    shot(create.window(), &format!("{tag}-create-archive"));
+    create.invoke_create();
+    let w = ui.as_weak();
+    wait_until("archive creation", move || {
+        !w.unwrap().get_native_running() && made.exists()
+    });
+    let job = main_window::native_window().unwrap();
+    assert!(!job.get_failed(), "{}", job.get_message());
+    assert_eq!(
+        std::fs::read(source).unwrap(),
+        b"created through GUI callbacks"
+    );
+    job.hide().unwrap();
     ui.hide().unwrap();
 }
 
@@ -364,7 +421,7 @@ fn shell_switch_flow(scheme: ColorScheme, tag: &str, data: &Path) {
     assert!(!ui.get_notice_bad());
     // The startup check, answering late, didn't flip the switch back.
     assert!(ui.get_shell_menu_on());
-    assert!(data.join("kio/servicemenus/hatchzip.desktop").exists());
+    assert!(data.join("kio/servicemenus/7zip-hatch.desktop").exists());
     shot(ui.window(), &format!("{tag}-13-right-click-menu"));
 
     ui.set_notice("".into());
@@ -374,7 +431,7 @@ fn shell_switch_flow(scheme: ColorScheme, tag: &str, data: &Path) {
     wait_until("the menu to be removed", move || {
         w.unwrap().get_notice() != ""
     });
-    assert!(!data.join("kio/servicemenus/hatchzip.desktop").exists());
+    assert!(!data.join("kio/servicemenus/7zip-hatch.desktop").exists());
     ui.hide().unwrap();
 }
 
@@ -448,6 +505,7 @@ fn windows_end_to_end() {
 
     for (scheme, tag) in [(ColorScheme::Light, "light"), (ColorScheme::Dark, "dark")] {
         main_window_flow(scheme, tag);
+        normal_desktop_flow(scheme, tag);
         task_window_flow(scheme, tag);
         task_window_states(scheme, tag);
         password_flow(scheme, tag);

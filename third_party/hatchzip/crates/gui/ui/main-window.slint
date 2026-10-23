@@ -94,6 +94,10 @@ export component MainWindow inherits Window {
     in property <bool> keep-free-valid: true;
     in-out property <bool> verify-first;
     in property <TaskView> task;
+    in property <bool> native-running;
+    in property <bool> space-saving-available: true;
+    in-out property <bool> space-saving;
+    in-out property <bool> confirm-consume;
     in property <bool> password-shown;
     in property <bool> password-wrong;
     in property <string> password-name;
@@ -108,6 +112,9 @@ export component MainWindow inherits Window {
     in property <bool> notice-bad;
 
     callback open-archive();
+    callback create-archive(bool);
+    callback extraction-mode-changed();
+    callback confirm-extract();
     callback password-ok(string);
     callback password-cancel();
     callback shell-menu-toggled();
@@ -124,7 +131,7 @@ export component MainWindow inherits Window {
     callback about();
     callback quit();
 
-    title: root.screen == Screen.opened ? root.archive-name + " - HatchZip" : "HatchZip";
+    title: root.screen == Screen.opened ? root.archive-name + " - 7-Zip Hatch" : "7-Zip Hatch";
     preferred-width: 980px;
     preferred-height: 660px;
     min-width: 640px;
@@ -137,10 +144,20 @@ export component MainWindow inherits Window {
             MenuItem {
                 title: "Open…";
                 shortcut: @keys(Control + O);
-                enabled: root.task.phase == Phase.idle || root.task.phase == Phase.done;
+                enabled: !root.native-running && (root.task.phase == Phase.idle || root.task.phase == Phase.done);
                 activated => {
                     root.open-archive();
                 }
+            }
+            MenuItem {
+                title: "Create archive from files…";
+                enabled: !root.native-running && (root.task.phase == Phase.idle || root.task.phase == Phase.done);
+                activated => { root.create-archive(false); }
+            }
+            MenuItem {
+                title: "Create archive from folder…";
+                enabled: !root.native-running && (root.task.phase == Phase.idle || root.task.phase == Phase.done);
+                activated => { root.create-archive(true); }
             }
             MenuSeparator { }
             MenuItem {
@@ -173,7 +190,7 @@ export component MainWindow inherits Window {
         Menu {
             title: "Help";
             MenuItem {
-                title: "About HatchZip";
+                title: "About 7-Zip Hatch";
                 activated => {
                     root.about();
                 }
@@ -197,7 +214,7 @@ export component MainWindow inherits Window {
                 horizontal-alignment: center;
             }
             Text {
-                text: "The archive is removed progressively during extraction, so only the space for the extracted files is required.";
+                text: "Browse, create, test, and extract archives. Choose space-saving extraction when you need to release archive space as files come out.";
                 color: Theme.muted;
                 horizontal-alignment: center;
                 wrap: word-wrap;
@@ -205,6 +222,8 @@ export component MainWindow inherits Window {
             HorizontalLayout {
                 alignment: center;
                 padding-top: 6px;
+                Button { text: "Compress files…"; clicked => { root.create-archive(false); } }
+                Button { text: "Compress folder…"; clicked => { root.create-archive(true); } }
                 Button {
                     text: "Open archive…";
                     primary: true;
@@ -214,14 +233,14 @@ export component MainWindow inherits Window {
                 }
             }
             Text {
-                text: "Or drag an archive onto this window. Supported formats: ZIP, 7z, tar, tar.gz, and split archives.";
+                text: "Or drag an archive onto this window. 7z, ZIP, tar, compressed tar, split archives, and other formats supported by 7-Zip.";
                 color: Theme.faint;
                 font-size: Theme.small-size;
                 horizontal-alignment: center;
             }
         }
         // The same switch as in the Settings menu, where a first-time user
-        // looks: most will use HatchZip from the right-click menu.
+        // looks: most will use 7-Zip Hatch from the right-click menu.
         if root.shell-menu-available: HorizontalLayout {
             y: parent.height - self.height - 20px;
             height: self.preferred-height;
@@ -282,6 +301,12 @@ export component MainWindow inherits Window {
             padding-top: 16px;
             padding-bottom: 14px;
             spacing: 4px;
+            HorizontalLayout {
+                spacing: 8px;
+                Button { text: "Open…"; enabled: !root.native-running; clicked => { root.open-archive(); } }
+                Button { text: "Create archive…"; enabled: !root.native-running; clicked => { root.create-archive(false); } }
+                Rectangle { horizontal-stretch: 1; }
+            }
             Text {
                 text: root.archive-name;
                 font-size: Theme.title-size;
@@ -323,6 +348,17 @@ export component MainWindow inherits Window {
                 font-weight: 600;
             }
 
+            if root.mode == Mode.fresh: CheckBox {
+                text: "Save disk space by consuming the archive";
+                enabled: root.space-saving-available && !root.native-running;
+                checked <=> root.space-saving;
+                toggled => { root.extraction-mode-changed(); }
+            }
+            if root.mode == Mode.fresh && !root.space-saving-available: Text {
+                text: "This archive supports ordinary extraction. Space-saving extraction is unavailable for this format or layout.";
+                wrap: word-wrap;
+                color: Theme.muted;
+            }
             if root.mode == Mode.fresh: HorizontalLayout {
                 spacing: 8px;
                 Text {
@@ -382,7 +418,7 @@ export component MainWindow inherits Window {
             HorizontalLayout {
                 spacing: 8px;
                 Text {
-                    text: root.mode == Mode.fresh ? "The archive is removed progressively during extraction. An interrupted extraction can be resumed." : "";
+                    text: root.mode == Mode.fresh ? (root.space-saving ? "The archive will be consumed. Progress is saved so extraction can resume after interruption." : "Ordinary extraction keeps the original archive. Choose a new or empty destination folder.") : "";
                     color: Theme.muted;
                     font-size: Theme.small-size;
                     wrap: word-wrap;
@@ -402,9 +438,9 @@ export component MainWindow inherits Window {
                     }
                 }
                 Button {
-                    text: root.mode == Mode.fresh ? "Extract" : (root.mode == Mode.resume ? "Resume extraction" : "Finish");
+                    text: root.mode == Mode.fresh ? (root.space-saving ? "Extract and consume…" : "Extract") : (root.mode == Mode.resume ? "Resume extraction" : "Finish");
                     primary: true;
-                    enabled: root.mode == Mode.orphan || (root.plan.ready && root.plan.fits && root.keep-free-valid);
+                    enabled: !root.native-running && (root.mode == Mode.orphan || (root.plan.ready && root.plan.fits && root.keep-free-valid));
                     clicked => {
                         root.extract();
                     }
@@ -452,6 +488,31 @@ export component MainWindow inherits Window {
                     give-back => {
                         root.give-back();
                     }
+                }
+            }
+        }
+    }
+
+    if root.confirm-consume: Rectangle {
+        background: #0008;
+        TouchArea { }
+        Rectangle {
+            width: min(560px, parent.width - 48px);
+            height: confirmation.preferred-height;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            background: Palette.background;
+            border-radius: 8px;
+            confirmation := VerticalLayout {
+                padding: 24px;
+                spacing: 16px;
+                Text { text: "Extract and remove the original archive?"; font-size: 18px; font-weight: 600; wrap: word-wrap; }
+                Text { text: root.archive-name + " will shrink as its files are safely extracted to " + root.output + ". When complete, only the extracted files remain. Keep the recovery files if extraction is interrupted."; wrap: word-wrap; }
+                HorizontalLayout {
+                    alignment: end;
+                    spacing: 8px;
+                    Button { text: "Cancel"; clicked => { root.confirm-consume = false; } }
+                    Button { text: "Extract and remove archive"; primary: true; clicked => { root.confirm-consume = false; root.confirm-extract(); } }
                 }
             }
         }

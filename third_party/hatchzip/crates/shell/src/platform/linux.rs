@@ -12,7 +12,7 @@ use crate::{ACTIONS, Dirs, EXTENSIONS};
 
 const MIME_TYPES: &str = "application/zip;application/x-zip-compressed;application/x-7z-compressed;\
                           application/x-tar;application/x-compressed-tar;";
-const MARK: &str = "Added by HatchZip; `hatchzip-gui --unregister-shell` removes it.";
+const MARK: &str = "Added by 7-Zip Hatch; `7zip-hatch --unregister-shell` removes it.";
 
 pub fn current_dirs() -> Result<Dirs> {
     let data = match std::env::var_os("XDG_DATA_HOME").filter(|v| !v.is_empty()) {
@@ -25,19 +25,19 @@ pub fn current_dirs() -> Result<Dirs> {
 }
 
 fn kde_file(dirs: &Dirs) -> PathBuf {
-    dirs.data.join("kio/servicemenus/hatchzip.desktop")
+    dirs.data.join("kio/servicemenus/7zip-hatch.desktop")
 }
 
 fn nautilus_file(dirs: &Dirs, label: &str) -> PathBuf {
     dirs.data
         .join("nautilus/scripts")
-        .join(format!("HatchZip - {label}"))
+        .join(format!("7-Zip Hatch - {label}"))
 }
 
 fn nemo_file(dirs: &Dirs, id: &str) -> PathBuf {
     dirs.data
         .join("nemo/actions")
-        .join(format!("hatchzip-{id}.nemo_action"))
+        .join(format!("7zip-hatch-{id}.nemo_action"))
 }
 
 /// Desktop entry `Exec` keys want the program quoted, with `"`, `` ` ``, `$`
@@ -75,7 +75,7 @@ pub fn register(dirs: &Dirs, gui: &Path) -> Result<Vec<String>> {
 
     let mut kde = format!(
         "# {MARK}\n[Desktop Entry]\nType=Service\nMimeType={MIME_TYPES}\nActions={}\n\
-         X-KDE-Submenu=HatchZip\nIcon=archive-extract\n",
+         X-KDE-Submenu=7-Zip Hatch\nIcon=archive-extract\n",
         ACTIONS.iter().map(|a| a.id).collect::<Vec<_>>().join(";") + ";"
     );
     for a in ACTIONS {
@@ -97,7 +97,7 @@ pub fn register(dirs: &Dirs, gui: &Path) -> Result<Vec<String>> {
         write(&nautilus_file(dirs, a.label), &script, true)?;
 
         let nemo = format!(
-            "# {MARK}\n[Nemo Action]\nName={} with HatchZip\nIcon-Name=archive-extract\n\
+            "# {MARK}\n[Nemo Action]\nName={} with 7-Zip Hatch\nIcon-Name=archive-extract\n\
              Exec={exec} {} %F\nSelection=s\nExtensions={};\n",
             a.label,
             a.flag,

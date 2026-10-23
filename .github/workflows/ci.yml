@@ -1,4 +1,4 @@
-name: Embedded HatchZip
+name: 7-Zip Hatch
 
 on:
   push:
@@ -21,11 +21,19 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-15, windows-2025]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/build/hatch-target
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libfontconfig1-dev
       - name: Install pinned Rust tools
         run: rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
       - name: Format
@@ -33,7 +41,7 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy
         working-directory: third_party/hatchzip
-        run: cargo clippy --locked -p hatchzip -p hatchzip-core --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Build embedded executable (Unix)
         if: runner.os != 'Windows'
         run: python3 Hatch/build.py --debug --jobs 4
@@ -56,7 +64,7 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then suffix=.exe; else suffix=; fi
           export SEVENZIP_HATCH_BINARY="$GITHUB_WORKSPACE/build/debug/7zz$suffix"
           export CARGO_TARGET_DIR="$GITHUB_WORKSPACE/build/hatch-target"
-          cargo test --locked -p hatchzip -p hatchzip-core
+          cargo test --locked --workspace
       - name: Build release (Unix)
         if: runner.os != 'Windows'
         run: python3 Hatch/build.py --jobs 4
@@ -72,3 +80,20 @@ jobs:
       - name: Test release (Windows)
         if: runner.os == 'Windows'
         run: python Hatch/test_integration.py build/release/7zz.exe
+      - name: Build desktop (Unix)
+        if: runner.os != 'Windows'
+        run: python3 Hatch/build_desktop.py --skip-engine --jobs 4
+      - name: Build desktop and Windows File Manager
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+          python Hatch/build_desktop.py --skip-engine --jobs 4
+      - name: Package desktop
+        run: python Hatch/package_desktop.py
+      - name: Upload desktop
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: 7zip-hatch-${{ runner.os }}-${{ runner.arch }}
+          path: build/packages/*
+          if-no-files-found: error

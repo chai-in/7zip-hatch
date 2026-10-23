@@ -10,9 +10,9 @@ use slint::{Model, ModelTracker};
 use crate::EntryRow;
 
 pub struct Entry {
-    path: Box<str>,
-    size: u64,
-    kind: Kind,
+    pub(crate) path: Box<str>,
+    pub(crate) size: u64,
+    pub(crate) kind: Kind,
 }
 
 /// Entries in archive order, as `hatchzip list` prints them.

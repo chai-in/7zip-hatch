@@ -745,6 +745,9 @@ bool ExecuteFileCommand(unsigned id)
 
   switch (id)
   {
+    case IDM_HATCH_EXTRACT:
+      g_App.GetFocusedPanel().ExtractArchivesSpaceSaving();
+      break;
     // File
     case IDM_OPEN: g_App.OpenItem(); break;
     

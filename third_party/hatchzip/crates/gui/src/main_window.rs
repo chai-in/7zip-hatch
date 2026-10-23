@@ -20,9 +20,13 @@ use crate::settings::{self, Settings};
 use crate::task::Task;
 use crate::text::{self, gb_text, parse_gb, plan_view};
 use crate::work::{Request, sentence};
-use crate::{AboutWindow, MainWindow, Mode, PlanView, Screen, TaskView, platform, shell};
+use crate::{
+    AboutWindow, CreateWindow, MainWindow, Mode, NativeTaskWindow, PlanView, Screen, TaskView,
+    platform, shell,
+};
+use crate::{desktop, native};
 
-const REPO: &str = "https://github.com/xevrion/hatchzip";
+const REPO: &str = "https://github.com/chai-in/7zip-hatch";
 
 /// An archive opened read-only for looking at. It takes no lock, so another
 /// HatchZip can still extract it; extraction reopens it for writing.
@@ -34,6 +38,7 @@ struct Loaded {
     output: PathBuf,
     job: Option<Job>,
     password: Option<String>,
+    size: u64,
 }
 
 /// Runs on a worker thread; an encrypted archive asks for its password
@@ -45,10 +50,53 @@ fn load(archive: &Path, password: Option<String>) -> Result<Loaded> {
         .unwrap_or_default()
         .to_string_lossy()
         .into_owned();
-    let (state, password) =
-        session::open_encrypted(&primary, &paths, None, false, password, |wrong| {
+    let attempt =
+        session::open_encrypted(&primary, &paths, None, false, password.clone(), |wrong| {
             crate::password::ask(&file_name, wrong)
-        })?;
+        });
+    let (state, password) = match attempt {
+        Ok(loaded) => loaded,
+        Err(e)
+            if e.is::<hatchzip_core::archive::PasswordNeeded>()
+                || e.is::<hatchzip_core::archive::WrongPassword>() =>
+        {
+            return Err(e);
+        }
+        Err(_) if !paths.exists() => {
+            let mut password = password;
+            let mut wrong = false;
+            for _ in 0..4 {
+                match native::list(&primary, password.as_deref()) {
+                    Ok(listing) => {
+                        return Ok(Loaded {
+                            name: file_name,
+                            summary: format!(
+                                "7-Zip archive · {} entries · {} uncompressed",
+                                listing.entries.len(),
+                                human(listing.size)
+                            ),
+                            entries: listing.entries,
+                            mode: Mode::Fresh,
+                            output: session::default_output(&primary),
+                            job: None,
+                            password,
+                            size: listing.size,
+                        });
+                    }
+                    Err(e) if format!("{e:#}").to_lowercase().contains("password") => {
+                        password = crate::password::ask(&file_name, wrong);
+                        if password.is_none() {
+                            return Err(e);
+                        }
+                        wrong = true;
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+            anyhow::bail!("The archive could not be opened with that password");
+        }
+        Err(e) => return Err(e),
+    };
     let (job, mode, output, total, left) = match state {
         State::Fresh(job, out) => {
             let total = job.remaining_size();
@@ -95,6 +143,7 @@ fn load(archive: &Path, password: Option<String>) -> Result<Loaded> {
         output,
         job,
         password,
+        size: total,
     })
 }
 
@@ -125,6 +174,10 @@ struct App {
     /// The person changed the right-click switch, so the startup check,
     /// which may answer later, must not overwrite it.
     shell_touched: Cell<bool>,
+    normal_size: Cell<u64>,
+    native_window: RefCell<Option<NativeTaskWindow>>,
+    create_window: RefCell<Option<CreateWindow>>,
+    quit_after_native: Cell<bool>,
 }
 
 thread_local! {
@@ -141,9 +194,21 @@ fn post(f: impl FnOnce(&Rc<App>) + Send + 'static) {
 }
 
 pub fn run(archive: Option<PathBuf>, drops: Rc<Drops>) -> Result<()> {
+    run_configured(archive, drops, false)
+}
+
+pub fn run_space_saving(archive: PathBuf, drops: Rc<Drops>) -> Result<()> {
+    run_configured(Some(archive), drops, true)
+}
+
+fn run_configured(archive: Option<PathBuf>, drops: Rc<Drops>, consume: bool) -> Result<()> {
     let file = settings::file();
-    let saved = file.as_deref().map(Settings::load_from).unwrap_or_default();
+    let mut saved = file.as_deref().map(Settings::load_from).unwrap_or_default();
+    if consume {
+        saved.space_saving = true;
+    }
     let ui = build(archive, &drops, saved, file)?;
+    platform::install_open_documents(drops);
     // Opening only reads, so it needn't wait for the first frame like a
     // task does; this only arms the switch to software drawing.
     crate::backend::when_drawn(ui.window(), || {});
@@ -164,6 +229,7 @@ pub fn build(
     let ui = MainWindow::new()?;
     ui.set_keep_free(gb_text(settings.keep_free).into());
     ui.set_verify_first(settings.verify_first);
+    ui.set_space_saving(settings.space_saving);
     ui.set_shell_menu_available(platform::SHELL_MENU);
     ui.set_shell_menu_label(platform::SHELL_MENU_LABEL.into());
 
@@ -189,6 +255,10 @@ pub fn build(
         settings_file,
         notice_timer: Timer::default(),
         shell_touched: Cell::new(false),
+        normal_size: Cell::new(0),
+        native_window: RefCell::new(None),
+        create_window: RefCell::new(None),
+        quit_after_native: Cell::new(false),
     });
     APP.with(|a| *a.borrow_mut() = Some(app.clone()));
 
@@ -239,6 +309,16 @@ fn wire(ui: &MainWindow, app: &Rc<App>) {
     let a = app.clone();
     ui.on_open_archive(move || a.pick_archive());
     let a = app.clone();
+    ui.on_create_archive(move |folder| a.pick_inputs(folder));
+    let a = app.clone();
+    ui.on_extraction_mode_changed(move || {
+        let on = a.ui().get_space_saving();
+        a.change_settings(|s| s.space_saving = on);
+        a.refresh_plan();
+    });
+    let a = app.clone();
+    ui.on_confirm_extract(move || a.extract_confirmed());
+    let a = app.clone();
     ui.on_change_output(move || a.pick_output());
     let a = app.clone();
     ui.on_keep_free_edited(move |text| a.keep_free_edited(&text));
@@ -267,13 +347,13 @@ fn wire(ui: &MainWindow, app: &Rc<App>) {
     ui.on_give_back(move || a.give_back());
     let a = app.clone();
     ui.on_quit(move || {
-        if a.runner.may_close() {
+        if a.may_close() {
             let _ = slint::quit_event_loop();
         }
     });
     let a = app.clone();
     ui.window().on_close_requested(move || {
-        if a.runner.may_close() {
+        if a.may_close() {
             let _ = slint::quit_event_loop();
             CloseRequestResponse::HideWindow
         } else {
@@ -293,7 +373,7 @@ impl App {
     }
 
     fn open(&self, path: PathBuf) {
-        if self.runner.running() {
+        if self.runner.running() || self.ui().get_native_running() {
             return;
         }
         let ui = self.ui();
@@ -346,6 +426,13 @@ impl App {
         ui.set_summary(loaded.summary.into());
         ui.set_entries(ModelRc::new(Entries(loaded.entries)));
         ui.set_mode(loaded.mode);
+        ui.set_space_saving_available(loaded.job.is_some());
+        if loaded.mode != Mode::Fresh {
+            ui.set_space_saving(true);
+        } else if loaded.job.is_none() {
+            ui.set_space_saving(false);
+        }
+        self.normal_size.set(loaded.size);
         ui.set_output(loaded.output.display().to_string().into());
         ui.set_screen(Screen::Opened);
         *self.name.borrow_mut() = loaded.name;
@@ -372,11 +459,29 @@ impl App {
         let out = self.output.borrow().clone();
         let resuming = self.mode.get() == Mode::Resume;
         let keep_free = self.keep_free.get();
+        let consume = ui.get_space_saving();
+        let size = self.normal_size.get();
         std::thread::spawn(move || {
             let job = job.lock().expect("plan thread panicked");
-            let Some(job) = job.as_ref() else { return };
-            let view = match session::plan(job, &out, resuming, keep_free) {
-                Ok(plan) => plan_view(&plan),
+            let result = if consume {
+                job.as_ref()
+                    .map(|j| session::plan(j, &out, resuming, keep_free))
+                    .unwrap_or_else(|| {
+                        Err(anyhow::anyhow!(
+                            "Space-saving extraction is unavailable for this archive"
+                        ))
+                    })
+            } else {
+                native::plan(size, &out, keep_free)
+            };
+            let view = match result {
+                Ok(plan) => {
+                    let mut view = plan_view(&plan);
+                    if !consume {
+                        view.note = "Ordinary extraction keeps the original archive.".into();
+                    }
+                    view
+                }
                 Err(e) => PlanView {
                     ready: true,
                     verdict: sentence(&format!("{e:#}")).into(),
@@ -447,7 +552,7 @@ impl App {
     }
 
     fn pick_archive(&self) {
-        if self.runner.running() {
+        if self.runner.running() || self.ui().get_native_running() {
             return;
         }
         let ui = self.ui();
@@ -496,11 +601,36 @@ impl App {
     }
 
     fn extract(&self) {
+        if self.runner.running() || self.ui().get_native_running() {
+            return;
+        }
+        if self.mode.get() == Mode::Fresh && self.ui().get_space_saving() {
+            self.ui().set_confirm_consume(true);
+        } else {
+            self.extract_confirmed();
+        }
+    }
+
+    fn extract_confirmed(&self) {
+        if self.runner.running() || self.ui().get_native_running() {
+            return;
+        }
         let Some(archive) = self.archive.borrow().clone() else {
             return;
         };
         let ui = self.ui();
         let output = self.output.borrow().clone();
+        if self.mode.get() == Mode::Fresh && !ui.get_space_saving() {
+            self.start_native(
+                "Extracting archive",
+                native::Operation::Extract {
+                    archive,
+                    output,
+                    password: self.password.borrow().clone(),
+                },
+            );
+            return;
+        }
         let request = Request::Extract {
             archive,
             // A resume must go where it started; the journal knows where.
@@ -539,9 +669,22 @@ impl App {
     }
 
     fn test(&self) {
+        if self.runner.running() || self.ui().get_native_running() {
+            return;
+        }
         let Some(archive) = self.archive.borrow().clone() else {
             return;
         };
+        if self.job.borrow().lock().is_ok_and(|j| j.is_none()) {
+            self.start_native(
+                "Testing archive",
+                native::Operation::Test {
+                    archive,
+                    password: self.password.borrow().clone(),
+                },
+            );
+            return;
+        }
         let request = Request::Test {
             archive,
             password: self.password.borrow().clone(),
@@ -577,6 +720,89 @@ impl App {
         }
     }
 
+    fn start_native(&self, title: &str, operation: native::Operation) {
+        if self.runner.running() || self.ui().get_native_running() {
+            return;
+        }
+        let secret = match &operation {
+            native::Operation::Create { options, .. } if !options.password.is_empty() => {
+                Some(options.password.clone())
+            }
+            _ => None,
+        };
+        self.ui().set_native_running(true);
+        match desktop::task(
+            title,
+            "The original files are kept.",
+            operation,
+            move |archive| {
+                post(move |app| {
+                    app.ui().set_native_running(false);
+                    if app.quit_after_native.get() {
+                        let _ = slint::quit_event_loop();
+                        return;
+                    }
+                    if let Some(path) = archive {
+                        *app.archive.borrow_mut() = Some(path.clone());
+                        *app.password.borrow_mut() = secret;
+                        app.open(path);
+                    }
+                });
+            },
+        ) {
+            Ok(window) => *self.native_window.borrow_mut() = Some(window),
+            Err(e) => {
+                self.ui().set_native_running(false);
+                self.notify(&format!("{e:#}"), true);
+            }
+        }
+    }
+
+    fn may_close(&self) -> bool {
+        if self.ui().get_native_running() {
+            self.quit_after_native.set(true);
+            if let Some(w) = self.native_window.borrow().as_ref() {
+                w.invoke_cancel();
+            }
+            false
+        } else {
+            self.runner.may_close()
+        }
+    }
+
+    fn pick_inputs(&self, folder: bool) {
+        if self.runner.running() || self.ui().get_native_running() {
+            return;
+        }
+        let ui = self.ui();
+        let dialog = rfd::AsyncFileDialog::new()
+            .set_title("Choose files to compress")
+            .set_parent(&ui.window().window_handle());
+        let _ = slint::spawn_local(async move {
+            let inputs = if folder {
+                dialog
+                    .pick_folder()
+                    .await
+                    .map(|p| vec![p.path().to_path_buf()])
+            } else {
+                dialog
+                    .pick_files()
+                    .await
+                    .map(|files| files.into_iter().map(|p| p.path().to_path_buf()).collect())
+            };
+            if let Some(inputs) = inputs
+                && let Some(app) = APP.with(|a| a.borrow().clone())
+            {
+                match desktop::create(inputs, |operation| {
+                    post(move |app| app.start_native("Creating archive", operation));
+                }) {
+                    Ok(w) => *app.create_window.borrow_mut() = Some(w),
+                    Err(e) => app.notify(&format!("{e:#}"), true),
+                }
+            }
+        });
+    }
+
     fn show_about(&self) {
         let mut about = self.about.borrow_mut();
         if about.is_none() {
@@ -597,4 +823,27 @@ impl App {
             let _ = w.show();
         }
     }
+}
+
+pub fn native_window() -> Option<NativeTaskWindow> {
+    APP.with(|a| {
+        a.borrow().as_ref().and_then(|app| {
+            app.native_window
+                .borrow()
+                .as_ref()
+                .map(|w| w.clone_strong())
+        })
+    })
+}
+
+pub fn create_for_paths(inputs: Vec<PathBuf>) -> Result<CreateWindow> {
+    let ui = desktop::create(inputs, |operation| {
+        post(move |app| app.start_native("Creating archive", operation));
+    })?;
+    APP.with(|a| {
+        if let Some(app) = a.borrow().as_ref() {
+            *app.create_window.borrow_mut() = Some(ui.clone_strong());
+        }
+    });
+    Ok(ui)
 }

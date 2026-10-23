@@ -11,6 +11,7 @@
 #include "../../../Windows/FileName.h"
 #include "../../../Windows/PropVariant.h"
 #include "../../../Windows/Thread.h"
+#include "../../../Windows/ProcessUtils.h"
 
 #include "../../PropID.h"
 
@@ -1036,6 +1037,45 @@ void CPanel::ExtractArchives()
       , false  // elimDup
       , ci.WriteZone
       );
+}
+
+void CPanel::ExtractArchivesSpaceSaving()
+{
+  UString archive;
+  if (!_parentFolders.IsEmpty())
+  {
+    // A nested virtual archive is not independently owned on disk. Use the
+    // outer archive and release the File Manager's reader before handing it
+    // to the consuming extractor, which takes an exclusive Windows handle.
+    archive = _parentFolders[0].VirtualPath;
+    const int slash = archive.ReverseFind_PathSepar();
+    if (slash < 0 || BindToPathAndRefresh(archive.Left((unsigned)slash + 1)) != S_OK)
+      return;
+  }
+  else
+  {
+    CRecordVector<UInt32> indices;
+    Get_ItemIndices_Operated(indices);
+    if (indices.Size() != 1 || FindDir_InOperatedList(indices) != -1)
+    {
+      MessageBoxW(GetParent(), L"Select one archive file for space-saving extraction.",
+          L"7-Zip Hatch", MB_OK | MB_ICONINFORMATION);
+      return;
+    }
+    UStringVector paths;
+    GetFilePaths(indices, paths);
+    archive = paths[0];
+  }
+  UString imageName = fs2us(NWindows::NDLL::GetModuleDirPrefix());
+  imageName += "7zip-hatch.exe";
+  UString params = L"--space-saving \"";
+  params += archive;
+  params.Add_Char('"');
+  NWindows::CProcess process;
+  const WRes res = process.Create(imageName, params, NULL);
+  if (res != 0)
+    MessageBoxW(GetParent(), L"Unable to open the space-saving extractor. Install the complete 7-Zip Hatch desktop package.",
+        L"7-Zip Hatch", MB_OK | MB_ICONERROR);
 }
 
 /*

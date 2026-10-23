@@ -1,7 +1,8 @@
 # 7zip-hatch
 
 A 7-Zip fork with HatchZip's space-saving extraction engine linked into the
-same command-line executable. It uses standard archive formats, including `.7z`.
+same command-line executable, plus a desktop app for macOS, Windows, and Linux.
+It uses standard archive formats, including `.7z`.
 
 Based on [7-Zip 26.05](https://github.com/ip7z/7zip) by Igor Pavlov and
 [HatchZip 0.1.2](https://github.com/xevrion/hatchzip) by its contributors.
@@ -15,10 +16,41 @@ It includes HatchZip's space check, reserved free-space setting, passwords,
 verification, progress, interruption/resume, and partial-archive restore.
 Byte-split `.001`, `.002`, ... archives are supported.
 
-The engine is statically linked, with no helper executable or shell command.
-This initial integration is for the **CLI**. The original 7-Zip Windows GUI
-and HatchZip's separate GUI sources are retained; this mode has not yet
-been added to 7-Zip's File Manager or Explorer menus.
+The CLI engine is statically linked. The desktop app bundles that executable
+for ordinary 7-Zip operations and calls HatchZip's library for space-saving
+extraction. The original Windows File Manager also has a **Tools >
+Space-saving extraction** command that opens the desktop preview.
+
+## Desktop app
+
+Open **7-Zip Hatch** like a normal application. On macOS, drag the app to
+Applications, then launch it from Finder or use **Open With** on an archive.
+On Windows, keep `7zip-hatch.exe`, `7zz.exe`, and `7zFM.exe` together and launch
+either the new desktop frontend or the original File Manager. On Linux,
+keep `7zip-hatch` and `7zz` together and launch `7zip-hatch`.
+
+- **Open archive** or drop an archive onto the window to browse entries,
+  choose the destination, compare space requirements, and test integrity.
+- **Extract** keeps the archive. It extracts into a temporary folder, then
+  publishes the result to a new or empty destination. Cancellation removes
+  partial output and retains the source.
+- **Space-saving extraction** enables HatchZip's consuming mode. Review the
+  space plan, reserved free space, and verify-first setting. Confirm before
+  starting. Pause/resume and rebuilding the remaining archive use the same
+  recovery journal as the CLI. Successful extraction removes the source.
+- **Compress files / Compress folder** creates 7z or ZIP with compression
+  level, method, dictionary, solid block size, threads, split volumes,
+  encryption, and advanced `-m` properties. Source files are retained.
+  ZIP encryption requires an ASCII password of at most 99 characters;
+  7z supports Unicode passwords and encrypted filenames.
+
+Archives unsupported by HatchZip use the native engine for ordinary
+extraction. Existing archive updating, arbitrary metadata switches, and
+individual-entry editing remain available through the original Windows
+File Manager and CLI. The cross-platform frontend currently creates new
+archives and extracts whole archives.
+
+See [desktop build and packaging instructions](Hatch/DESKTOP.md).
 
 ## Build
 
@@ -118,7 +150,10 @@ tests on Linux, macOS, and Windows; its actual results establish support.
 
 7-Zip and the integration use **LGPL-2.1-or-later**, with upstream BSD and
 public-domain exceptions preserved. HatchZip is **MIT OR Apache-2.0**.
-Neither upstream is relicensed. See [LICENSE](LICENSE), [NOTICE](NOTICE),
+The complete Slint desktop executable is distributed under **GPL-3.0**;
+its original MIT/Apache components retain their notices. The separate CLI
+retains LGPL terms. See [desktop licensing](Hatch/DESKTOP.md#licensing),
+[LICENSE](LICENSE), [NOTICE](NOTICE),
 [7-Zip's license](DOC/License.txt), and [HatchZip's licenses](third_party/hatchzip/LICENSE-MIT).
 
 Default builds exclude RAR decompression codecs carrying the unRAR

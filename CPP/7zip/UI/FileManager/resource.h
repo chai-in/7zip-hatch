@@ -6,6 +6,7 @@
 
 #define IDB_ADD      100
 #define IDB_EXTRACT  101
+#define IDM_HATCH_EXTRACT  955
 #define IDB_TEST     102
 #define IDB_COPY     103
 #define IDB_MOVE     104

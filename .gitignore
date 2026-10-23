@@ -5,3 +5,5 @@
 CPP/7zip/Bundles/Alone2/hatch-*/
 build/
 __pycache__/
+
+CPP/7zip/Bundles/Fm/hatch-desktop-*/
