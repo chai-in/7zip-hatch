@@ -23,8 +23,20 @@ mkdir -p "$appdir/usr/bin" "$appdir/usr/share/doc/7zip-hatch"
 cp -a "$payload/7zip-hatch" "$payload/7zz" "$appdir/usr/bin/"
 cp -a "$payload/Licenses" "$payload/README.md" "$payload/INSTALLERS.md" "$payload/INSTALLER-PAYLOAD.json" "$appdir/usr/share/doc/7zip-hatch/"
 cp "$root/third_party/hatchzip/assets/icon/png/hatchzip-256.png" "$tools/$id.png"
+# winit loads keyboard and Wayland libraries with dlopen, so ldd cannot find
+# them. Also explicitly include the font and C++ libraries excluded by
+# linuxdeploy's default system-library list. Graphics drivers stay on the host.
+libraries=()
+for name in libfontconfig.so.1 libfreetype.so.6 libexpat.so.1 libz.so.1 \
+            libstdc++.so.6 libgcc_s.so.1 libxkbcommon.so.0 libxkbcommon-x11.so.0 \
+            libwayland-client.so.0 libwayland-cursor.so.0 libwayland-egl.so.1; do
+    library=$(ldconfig -p | awk -v name="$name" '$1 == name && /x86-64/ { print $NF }')
+    if [ -z "$library" ]; then echo "Missing desktop library: $name" >&2; exit 1; fi
+    libraries+=(--library "$library")
+done
 "$tools/linuxdeploy" --appdir "$appdir" \
     --executable "$appdir/usr/bin/7zip-hatch" --executable "$appdir/usr/bin/7zz" \
+    "${libraries[@]}" \
     --desktop-file "$root/Hatch/installers/linux/$id.desktop" \
     --icon-file "$tools/$id.png"
 # Its default AppRun is a symlink to the GUI. Replace the link itself.

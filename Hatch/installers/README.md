@@ -63,7 +63,9 @@ Hatch/installers/windows/test_setup.ps1 build/packages/7zip-hatch-0.2.0-windows-
 ```
 
 On Ubuntu 24.04 x86-64, install `desktop-file-utils`, `patchelf`, `file`,
-`curl`, `python3`, and enable `deb-src` repositories matching the installed
+`curl`, `python3`, `libfontconfig1`, `libfreetype6`, `libstdc++6`,
+`libxkbcommon-x11-0`, `libwayland-client0`, `libwayland-cursor0` and
+`libwayland-egl1`. Enable `deb-src` repositories matching the installed
 libraries. Then:
 
 ```sh

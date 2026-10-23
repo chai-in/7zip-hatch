@@ -53,7 +53,7 @@ jobs:
         run: |
           sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
           sudo apt-get update
-          sudo apt-get install -y desktop-file-utils patchelf libfontconfig1 libfreetype6 libstdc++6 xvfb openbox xdotool wmctrl imagemagick
+          sudo apt-get install -y desktop-file-utils patchelf libfontconfig1 libfreetype6 libstdc++6 libxkbcommon-x11-0 libwayland-client0 libwayland-cursor0 libwayland-egl1 xvfb openbox xdotool wmctrl imagemagick
       - name: Download and verify tested desktop payload
         run: |
           python3 Hatch/installers/test_payload.py
