@@ -4,6 +4,7 @@
 use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -151,7 +152,10 @@ fn load(archive: &Path, password: Option<String>) -> Result<Loaded> {
 /// one, so it never waits on them.
 type SharedJob = Arc<Mutex<Option<Job>>>;
 
+static NEXT_APP_ID: AtomicU64 = AtomicU64::new(1);
+
 struct App {
+    id: u64,
     ui: slint::Weak<MainWindow>,
     runner: Rc<Runner>,
     archive: RefCell<Option<PathBuf>>,
@@ -185,9 +189,12 @@ thread_local! {
 }
 
 /// Runs `f` on the UI thread with the app, from any thread.
-fn post(f: impl FnOnce(&Rc<App>) + Send + 'static) {
+fn post(id: u64, f: impl FnOnce(&Rc<App>) + Send + 'static) {
     let _ = slint::invoke_from_event_loop(move || {
-        if let Some(app) = APP.with(|a| a.borrow().clone()) {
+        if let Some(app) = APP.with(|a| a.borrow().clone())
+            && app.id == id
+            && app.ui.upgrade().is_some()
+        {
             f(&app);
         }
     });
@@ -240,6 +247,7 @@ pub fn build(
         }
     });
     let app = Rc::new(App {
+        id: NEXT_APP_ID.fetch_add(1, Ordering::Relaxed),
         ui: ui.as_weak(),
         runner,
         archive: RefCell::new(None),
@@ -267,18 +275,23 @@ pub fn build(
     if platform::SHELL_MENU {
         // Reading the registry or the menu folders is disk work; the box
         // fills in a moment later.
-        std::thread::spawn(|| {
+        let id = app.id;
+        std::thread::spawn(move || {
             let on =
                 hatchzip_shell::Dirs::current().is_ok_and(|d| hatchzip_shell::is_registered(&d));
-            post(move |app| {
+            post(id, move |app| {
                 if !app.shell_touched.get() {
                     app.ui().set_shell_menu_on(on);
                 }
             });
         });
     }
-    *drops.on_drop.borrow_mut() = Some(Box::new(|path| {
-        if let Some(app) = APP.with(|a| a.borrow().clone()) {
+    let id = app.id;
+    *drops.on_drop.borrow_mut() = Some(Box::new(move |path| {
+        if let Some(app) = APP.with(|a| a.borrow().clone())
+            && app.id == id
+            && app.ui.upgrade().is_some()
+        {
             app.open(path);
         }
     }));
@@ -403,9 +416,10 @@ impl App {
         *self.archive.borrow_mut() = Some(path.clone());
         *self.job.borrow_mut() = SharedJob::default();
 
+        let id = self.id;
         std::thread::spawn(move || {
             let result = load(&path, password);
-            post(move |app| app.loaded(generation, result));
+            post(id, move |app| app.loaded(generation, result));
         });
     }
 
@@ -461,6 +475,7 @@ impl App {
         let keep_free = self.keep_free.get();
         let consume = ui.get_space_saving();
         let size = self.normal_size.get();
+        let id = self.id;
         std::thread::spawn(move || {
             let job = job.lock().expect("plan thread panicked");
             let result = if consume {
@@ -488,7 +503,7 @@ impl App {
                     ..Default::default()
                 },
             };
-            post(move |app| {
+            post(id, move |app| {
                 if generation == app.generation.get() {
                     app.ui().set_plan(view);
                 }
@@ -520,9 +535,10 @@ impl App {
     fn shell_menu_toggled(&self) {
         self.shell_touched.set(true);
         let on = self.ui().get_shell_menu_on();
+        let id = self.id;
         std::thread::spawn(move || {
             let result = shell::set_menu(on);
-            post(move |app| {
+            post(id, move |app| {
                 let (text, bad) = match result {
                     Ok(()) if on => ("Context menu entries added.".to_string(), false),
                     Ok(()) => ("Context menu entries removed.".to_string(), false),
@@ -731,12 +747,13 @@ impl App {
             _ => None,
         };
         self.ui().set_native_running(true);
+        let id = self.id;
         match desktop::task(
             title,
             "The original files are kept.",
             operation,
             move |archive| {
-                post(move |app| {
+                post(id, move |app| {
                     app.ui().set_native_running(false);
                     if app.quit_after_native.get() {
                         let _ = slint::quit_event_loop();
@@ -793,8 +810,11 @@ impl App {
             if let Some(inputs) = inputs
                 && let Some(app) = APP.with(|a| a.borrow().clone())
             {
-                match desktop::create(inputs, |operation| {
-                    post(move |app| app.start_native("Creating archive", operation));
+                let id = app.id;
+                match desktop::create(inputs, move |operation| {
+                    post(id, move |app| {
+                        app.start_native("Creating archive", operation)
+                    });
                 }) {
                     Ok(w) => *app.create_window.borrow_mut() = Some(w),
                     Err(e) => app.notify(&format!("{e:#}"), true),
@@ -837,8 +857,13 @@ pub fn native_window() -> Option<NativeTaskWindow> {
 }
 
 pub fn create_for_paths(inputs: Vec<PathBuf>) -> Result<CreateWindow> {
-    let ui = desktop::create(inputs, |operation| {
-        post(move |app| app.start_native("Creating archive", operation));
+    let id = APP
+        .with(|a| a.borrow().as_ref().map(|a| a.id))
+        .ok_or_else(|| anyhow::anyhow!("Open the main window before creating an archive"))?;
+    let ui = desktop::create(inputs, move |operation| {
+        post(id, move |app| {
+            app.start_native("Creating archive", operation)
+        });
     })?;
     APP.with(|a| {
         if let Some(app) = a.borrow().as_ref() {
