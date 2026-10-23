@@ -15,7 +15,8 @@ deleted automatically. GitHub release immutability is enabled, including for
 the published 0.2.0 preview: finalize all draft assets before publication.
 Binary or source-asset additions require a new release version.
 Version tags matching `v*` are protected from update
-and deletion, with an explicit repository administrator override for recovery.
+and deletion, with a repository administrator override for unpublished tags.
+GitHub's immutable published-release locks still apply to administrators.
 
 The active rule definitions are versioned under `.github/rulesets/`. Changes
 to those files require an administrator to apply them through GitHub's ruleset
