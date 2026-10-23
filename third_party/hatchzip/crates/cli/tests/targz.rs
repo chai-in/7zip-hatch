@@ -329,6 +329,7 @@ fn multi_member_gzip_extracts_and_resumes() {
 }
 
 /// A pax record: its length, counting itself, then `key=value`.
+#[allow(dead_code, reason = "used by the Unix-only link fixture")]
 fn pax(key: &str, value: &str) -> Vec<u8> {
     let body = format!(" {key}={value}\n");
     let mut len = body.len() + 1;
