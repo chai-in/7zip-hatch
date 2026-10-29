@@ -1,5 +1,8 @@
 # Project images
 
+- `header.svg` is the README's editable vector banner. Its archive-box
+  illustration is decorative artwork, not an application screenshot or an
+  upstream project logo.
 - `desktop-linux.png` is an unmodified screenshot of the published 0.2.0
   AppImage opening a disposable ZIP archive during
   [installer CI](https://github.com/chai-in/7zip-hatch/actions/runs/40036590961).

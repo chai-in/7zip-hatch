@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">7-Zip Hatch — Create. Browse. Extract.</title>
+  <desc id="desc">An archive box and arrows illustrate archive workflows. Decorative artwork, not an application screenshot or an upstream logo.</desc>
+  <rect width="1200" height="260" rx="16" fill="#111820"/>
+  <path d="M0 240H1200" stroke="#29333E"/>
+  <rect x="40" y="43" width="4" height="169" rx="2" fill="#E1B487"/>
+  <text x="66" y="63" fill="#E1B487" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" letter-spacing="2.4">DESKTOP ARCHIVER / STANDARD FORMATS</text>
+  <text x="62" y="136" fill="#F4F0EB" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-1.8">7-Zip Hatch</text>
+  <text x="66" y="176" fill="#B9C3CE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="25">Create. Browse. Extract.</text>
+  <text x="66" y="213" fill="#8192A2" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.4">WINDOWS · MACOS · LINUX · DESKTOP PREVIEW</text>
+  <g stroke="#E1B487" stroke-width="3" stroke-linejoin="round"><path d="M920 88L996 53L1072 88V171L996 206L920 171V88Z" fill="#2B2929"/><path d="M920 88L996 123L1072 88M996 123V206M957 71L1033 106V139"/></g>
+      <path d="M868 118H897M884 105L897 118L884 131M1096 141H1125M1112 128L1125 141L1112 154" stroke="#6D655F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
