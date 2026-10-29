@@ -8,9 +8,6 @@
 
 > **0.2.0 desktop preview.** Ordinary extraction keeps the source archive. Space-saving extraction is opt-in and **changes and eventually removes it**. Evaluate the preview with replaceable copies and read the [limits](#before-using-space-saving-extraction) before using that mode.
 
-[![Cross-platform CI](https://github.com/chai-in/7zip-hatch/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/chai-in/7zip-hatch/actions/workflows/ci.yml)
-[![Installer checks](https://github.com/chai-in/7zip-hatch/actions/workflows/installers.yml/badge.svg?branch=main)](https://github.com/chai-in/7zip-hatch/actions/workflows/installers.yml)
-
 ## Download
 
 | Platform | Preview download | Requirements |
